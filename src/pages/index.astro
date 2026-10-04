@@ -1,9 +1,13 @@
 ---
-// Step 4 — multi-project discovery smoke test.
+// Step 5 — multi-project discovery with monorepo walk.
 //
 // Reads src/data/projects.json and src/data/errors.json (produced by
-// `npm run discover`) and renders the discovered project portfolio.
-// This replaces the hardcoded two-source fetch from Steps 1-3.
+// `npm run discover`). The discoverer walks the recursive tree of
+// every enabled repo, finds every nested project.yml, validates each,
+// and emits the two manifests.
+//
+// This page groups the discovered projects by their parent collection
+// and renders each group as a section.
 
 import projects from '../data/projects.json';
 import errors from '../data/errors.json';
@@ -14,11 +18,7 @@ interface ProjectMeta {
   branch: string;
   url: string;
   html_url: string;
-  description: string | null;
-  language: string | null;
-  pushed_at: string | null;
-  stargazers_count: number;
-  default_branch: string;
+  parent_path: string | null;
 }
 
 interface Project {
@@ -29,20 +29,8 @@ interface Project {
   categories?: string[];
   tags?: string[];
   status?: string;
-  tech_stack?: {
-    languages?: string[];
-    frameworks?: string[];
-    libraries?: string[];
-    databases?: string[];
-    infrastructure?: string[];
-    tools?: string[];
-  };
-  repository: {
-    provider: string;
-    owner: string;
-    name: string;
-    branch?: string;
-  };
+  tech_stack?: Record<string, string[]>;
+  repository: any;
   documentation?: any;
   presentation?: {
     featured?: boolean;
@@ -56,33 +44,44 @@ interface Project {
   _meta?: ProjectMeta;
 }
 
-// Cast the imported JSON (TS doesn't know its exact shape yet —
-// Step 5 will replace this with `json-schema-to-typescript`).
 const allProjects = (projects as Project[]) ?? [];
 const allErrors = (errors as any[]) ?? [];
 
-// Sort: featured first, then by presentation.order, then by repo + path.
+// Sort: collections first (by path), then leaves (by path).
 const sorted = [...allProjects].sort((a, b) => {
-  const fa = a.presentation?.featured ? -1000 : 0;
-  const fb = b.presentation?.featured ? -1000 : 0;
-  if (fa !== fb) return fa - fb;
-  const oa = a.presentation?.order ?? 0;
-  const ob = b.presentation?.order ?? 0;
-  if (oa !== ob) return oa - ob;
-  return (a._meta?.repo ?? '').localeCompare(b._meta?.repo ?? '');
+  const aCol = a.type === 'collection';
+  const bCol = b.type === 'collection';
+  if (aCol && !bCol) return -1;
+  if (!aCol && bCol) return 1;
+  return (a._meta?.path ?? '').localeCompare(b._meta?.path ?? '');
 });
 
-const featured = sorted.filter((p) => p.presentation?.featured);
-const rest = sorted.filter((p) => !p.presentation?.featured);
+// Find the root collection (parent_path = null) and the top-level
+// sub-collections (parent_path = a top-level directory like 'python').
+const rootCollection = sorted.find((p) => p._meta?.parent_path === null) ?? null;
+const collections = sorted.filter((p) => p.type === 'collection');
+const topLevelCollections = collections
+  .filter((c) => c !== rootCollection)
+  .sort((a, b) => (a._meta?.parent_path ?? '').localeCompare(b._meta?.parent_path ?? ''));
 
-// All distinct categories across discovered projects.
-const allCategories = Array.from(
-  new Set(allProjects.flatMap((p) => p.categories ?? []))
-).sort();
+// Group by top-level collection using path-prefix matching.
+// A project X is a descendant of collection C if X._meta.parent_path
+// starts with C._meta.parent_path + '/'.
+const groups: { collection: Project; children: Project[] }[] = [];
+for (const c of topLevelCollections) {
+  const dir = c._meta?.parent_path ?? '';
+  const children = sorted.filter((p) => {
+    if (p === c) return false; // exclude the collection itself
+    const pParent = p._meta?.parent_path ?? '';
+    return pParent.startsWith(dir + '/');
+  });
+  groups.push({ collection: c, children });
+}
+
+// Stats.
+const allCategories = Array.from(new Set(allProjects.flatMap((p) => p.categories ?? []))).sort();
 const allTypes = Array.from(new Set(allProjects.map((p) => p.type))).sort();
-const allLanguages = Array.from(
-  new Set(allProjects.flatMap((p) => p.tech_stack?.languages ?? []))
-).sort();
+const allLanguages = Array.from(new Set(allProjects.flatMap((p) => p.tech_stack?.languages ?? []))).sort();
 ---
 
 <!doctype html>
@@ -109,35 +108,46 @@ const allLanguages = Array.from(
       body {
         font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
         color: var(--fg); background: var(--bg);
-        max-width: 900px; margin: 2rem auto; padding: 0 1rem; line-height: 1.5;
+        max-width: 1100px; margin: 2rem auto; padding: 0 1rem; line-height: 1.5;
       }
       h1 { margin-bottom: 0.25rem; }
-      h2 { font-size: 1.15rem; margin: 2rem 0 0.5rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+      h2 { font-size: 1.2rem; margin: 2rem 0 0.5rem; padding-top: 1rem; border-top: 1px solid var(--border); }
       h3 { font-size: 0.95rem; margin: 0.75rem 0 0.25rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
       .desc { color: var(--muted); margin-top: 0; }
-      .grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+      .grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); margin-top: 0.75rem; }
       .card {
         background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px;
         padding: 1rem 1.1rem; display: flex; flex-direction: column; gap: 0.4rem;
       }
+      .card.featured { border-color: #fbbf24; box-shadow: 0 0 0 1px #fde68a; }
       .card h3 { margin: 0; color: var(--fg); font-size: 1.05rem; text-transform: none; letter-spacing: 0; font-weight: 600; }
-      .card p { margin: 0; font-size: 0.92em; color: var(--muted); }
+      .card .desc-mini { margin: 0; font-size: 0.88em; color: var(--muted); }
       .card .chips { margin-top: 0.4rem; }
       .chips { display: flex; flex-wrap: wrap; gap: 0.35rem; padding: 0; list-style: none; margin: 0.25rem 0; }
-      .chips li { background: #eef2ff; color: #3730a3; padding: 0.15rem 0.55rem; border-radius: 9999px; font-size: 0.8em; }
-      .meta { font-size: 0.8em; color: var(--muted); }
+      .chips li { background: #eef2ff; color: #3730a3; padding: 0.15rem 0.55rem; border-radius: 9999px; font-size: 0.78em; }
+      .chips.type li { background: #f3e8ff; color: #6b21a8; }
+      .chips.status li { background: #fef3c7; color: #92400e; }
+      .meta { font-size: 0.78em; color: var(--muted); }
       .meta a { color: var(--accent); text-decoration: none; }
       .meta a:hover { text-decoration: underline; }
       .stats { display: flex; flex-wrap: wrap; gap: 1.5rem; margin: 1rem 0; padding: 1rem; background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; }
       .stat strong { display: block; font-size: 1.4rem; font-weight: 600; }
       .stat span { color: var(--muted); font-size: 0.85em; }
-      .summary { padding: 0.75rem 1rem; border-radius: 6px; margin: 1rem 0; border: 1px solid; font-size: 0.95em; }
-      .summary.ok  { background: var(--ok-bg);  color: var(--ok-fg);  border-color: var(--ok-bd); }
-      .summary.err { background: var(--err-bg); color: var(--err-fg); border-color: var(--err-bd); }
-      .errors { background: var(--err-bg); border: 1px solid var(--err-bd); border-radius: 6px; padding: 1rem; }
+      .collection-header { display: flex; align-items: baseline; gap: 0.75rem; flex-wrap: wrap; }
+      .collection-header .path { font-size: 0.75rem; color: var(--muted); font-family: ui-monospace, monospace; }
+      .empty { padding: 0.75rem 1rem; border-radius: 6px; margin: 1rem 0; border: 1px solid var(--err-bd); background: var(--err-bg); color: var(--err-fg); }
+      .errors { background: var(--err-bg); border: 1px solid var(--err-bd); border-radius: 6px; padding: 1rem; margin: 1rem 0; }
       .errors h3 { color: var(--err-fg); margin: 0 0 0.5rem; }
       .errors ul { margin: 0; padding-left: 1.25rem; font-size: 0.88em; }
       .errors code { background: rgba(0,0,0,0.05); padding: 0.1rem 0.3rem; border-radius: 3px; }
+      .summary-banner { padding: 0.75rem 1rem; border-radius: 6px; margin: 1rem 0; border: 1px solid; font-size: 0.95em; }
+      .summary-banner.ok  { background: var(--ok-bg);  color: var(--ok-fg);  border-color: var(--ok-bd); }
+      .summary-banner.err { background: var(--err-bg); color: var(--err-fg); border-color: var(--err-bd); }
+      .hero {
+        background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px;
+        padding: 1.25rem 1.5rem; margin: 1rem 0;
+      }
+      .hero h2 { font-size: 1.4rem; margin: 0 0 0.5rem; padding: 0; border: none; }
     </style>
   </head>
   <body>
@@ -147,20 +157,25 @@ const allLanguages = Array.from(
       {allProjects.length > 0
         ? `${allProjects.length} project${allProjects.length === 1 ? '' : 's'} discovered across the GitHub account.`
         : 'No projects discovered yet.'}
-      Step 4 — multi-project discovery.
+      Step 5 — multi-project discovery with monorepo walk.
     </p>
 
     <div class="stats">
       <div class="stat"><strong>{allProjects.length}</strong><span>projects</span></div>
-      <div class="stat"><strong>{featured.length}</strong><span>featured</span></div>
+      <div class="stat"><strong>{collections.length}</strong><span>collections</span></div>
+      <div class="stat"><strong>{allProjects.length - collections.length}</strong><span>leaves</span></div>
       <div class="stat"><strong>{allCategories.length}</strong><span>categories</span></div>
       <div class="stat"><strong>{allLanguages.length}</strong><span>languages</span></div>
       <div class="stat"><strong>{allErrors.length}</strong><span>errors</span></div>
     </div>
 
-    {allErrors.length > 0 && (
+    {allErrors.length === 0 ? (
+      <div class="summary-banner ok">
+        <strong>All discovered projects pass schema validation.</strong>
+      </div>
+    ) : (
       <div class="errors">
-        <h3>{allErrors.length} validation error{allErrors.length === 1 ? '' : 's'}</h3>
+        <h3>{allErrors.length} error{allErrors.length === 1 ? '' : 's'}</h3>
         <ul>
           {allErrors.map((e) => (
             <li>
@@ -174,80 +189,84 @@ const allLanguages = Array.from(
       </div>
     )}
 
-    {featured.length > 0 && (
-      <>
-        <h2>★ Featured</h2>
-        <div class="grid">
-          {featured.map((p) => (
-            <article class="card">
-              <h3>{p.name}</h3>
-              <p>{p.description}</p>
-              {p.categories && p.categories.length > 0 && (
-                <ul class="chips">
-                  {p.categories.map((c) => <li>{c}</li>)}
-                </ul>
-              )}
-              <div class="meta">
-                <a href={p._meta?.html_url} target="_blank" rel="noopener">
-                  {p._meta?.repo}
-                </a>
-                {p._meta?.language && <> · {p._meta.language}</>}
-              </div>
-            </article>
-          ))}
-        </div>
-      </>
-    )}
-
-    {rest.length > 0 && (
-      <>
-        <h2>All projects</h2>
-        <div class="grid">
-          {rest.map((p) => (
-            <article class="card">
-              <h3>{p.name}</h3>
-              <p>{p.description}</p>
-              {p.categories && p.categories.length > 0 && (
-                <ul class="chips">
-                  {p.categories.map((c) => <li>{c}</li>)}
-                </ul>
-              )}
-              <div class="meta">
-                <a href={p._meta?.html_url} target="_blank" rel="noopener">
-                  {p._meta?.repo}
-                </a>
-                {p._meta?.language && <> · {p._meta.language}</>}
-              </div>
-            </article>
-          ))}
-        </div>
-      </>
-    )}
-
     {allProjects.length === 0 && (
-      <div class="summary err">
+      <div class="empty">
         <strong>No projects found.</strong>
         Run <code>npm run discover</code> to populate this list.
       </div>
     )}
 
-    <h2>Discovery summary</h2>
-    <p class="desc">
-      Run <code>npm run discover</code> (or <code>npm run build:full</code>
-      to also build) to refresh the project list from GitHub. The script:
-    </p>
+    {rootCollection && (
+      <section class="hero">
+        <h2>{rootCollection.presentation?.featured ? '★ ' : ''}{rootCollection.name}</h2>
+        <p class="desc">{rootCollection.description}</p>
+        {rootCollection.categories && rootCollection.categories.length > 0 && (
+          <ul class="chips">{rootCollection.categories.map((c) => <li>{c}</li>)}</ul>
+        )}
+        <div class="meta">
+          <a href={rootCollection._meta?.html_url} target="_blank" rel="noopener">
+            {rootCollection._meta?.repo}
+          </a>
+          {' '}— {topLevelCollections.length} top-level collection{topLevelCollections.length === 1 ? '' : 's'}
+          {' · '}{allProjects.length - collections.length} leaf project{allProjects.length - collections.length === 1 ? '' : 's'}
+        </div>
+      </section>
+    )}
+
+    {groups.map((g) => (
+      <>
+        <h2>
+          {g.collection
+            ? `${g.collection.presentation?.featured ? '★ ' : ''}${g.collection.name}`
+            : 'Standalone'}
+          {g.collection && (
+            <span class="path">— {g.collection._meta?.path}</span>
+          )}
+        </h2>
+        {g.collection && (
+          <p class="desc">{g.collection.description}</p>
+        )}
+        <div class="grid">
+          {(g.children as Project[]).map((p) => (
+            <article class={`card ${p.presentation?.featured ? 'featured' : ''}`}>
+              <h3>{p.name}</h3>
+              <p class="desc-mini">{p.description}</p>
+              <ul class="chips type">
+                <li>{p.type}</li>
+                {p.status && <li>{p.status}</li>}
+              </ul>
+              {p.categories && p.categories.length > 0 && (
+                <ul class="chips">{p.categories.map((c) => <li>{c}</li>)}</ul>
+              )}
+              {p.tech_stack?.languages && p.tech_stack.languages.length > 0 && (
+                <div class="meta">{p.tech_stack.languages.join(' · ')}</div>
+              )}
+              <div class="meta">
+                <a href={p._meta?.html_url} target="_blank" rel="noopener">{p._meta?.repo}</a>
+                {' '}@ <code style="font-size:0.9em">{p._meta?.branch}</code>
+              </div>
+            </article>
+          ))}
+        </div>
+      </>
+    ))}
+
+    <h2>How discovery works</h2>
     <ol>
-      <li>Lists every public repo for <code>{`{PORTFOLIO_USER:-SrLampi1001}`}</code>.</li>
-      <li>Filters by <code>data/projects.json</code> if present (allow-list).</li>
-      <li>For each enabled repo, fetches the root <code>project.yml</code> on the default branch.</li>
-      <li>Validates every fetched file against <code>schema/project.schema.json</code>.</li>
-      <li>Writes <code>src/data/projects.json</code> + <code>src/data/errors.json</code>.</li>
+      <li>List every public repo for <code>{`{PORTFOLIO_USER:-SrLampi1001}`}</code>.</li>
+      <li>Filter by <code>data/projects.json</code> if present (allow-list).</li>
+      <li>For each enabled repo, fetch the root <code>project.yml</code> on the default branch.</li>
+      <li>Walk the recursive tree (<code>git/trees/{`{branch}`}?recursive=1</code>) to find every nested <code>project.yml</code>.</li>
+      <li>Fetch each via <code>raw.githubusercontent.com</code> (no rate limit pressure).</li>
+      <li>Validate each against <code>schema/project.schema.json</code> (ajv).</li>
+      <li>Cross-validate unique project IDs.</li>
+      <li>Write <code>src/data/projects.json</code> and <code>src/data/errors.json</code>.</li>
     </ol>
 
     {allTypes.length > 0 && (
       <>
         <h2>Project types</h2>
-        <ul class="chips">{allTypes.map((t) => <li>{t}</li>)}</ul>
+        <ul class="chips type">{allTypes.map((t) => <li>{t}</li>)}</ul>
       </>
     )}
 

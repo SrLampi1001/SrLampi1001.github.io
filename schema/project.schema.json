@@ -20,7 +20,13 @@
         "experiment",
         "tool",
         "tutorial",
-        "docs"
+        "docs",
+        "documentation",
+        "static-site",
+        "cli",
+        "automation",
+        "api",
+        "web-app"
       ]
     },
     "Status": {
@@ -31,7 +37,10 @@
         "archived",
         "experimental",
         "completed",
-        "wip"
+        "wip",
+        "incomplete",
+        "in-progress",
+        "in progress"
       ]
     },
     "DeploymentType": {
@@ -42,6 +51,7 @@
         "cloudflare-worker",
         "vercel",
         "render",
+        "static-site",
         "other"
       ]
     },
@@ -81,6 +91,7 @@
         "libraries":      { "type": "array", "items": { "$ref": "#/definitions/LanguageString" } },
         "databases":      { "type": "array", "items": { "$ref": "#/definitions/LanguageString" } },
         "infrastructure": { "type": "array", "items": { "$ref": "#/definitions/LanguageString" } },
+        "ai":             { "type": "array", "items": { "$ref": "#/definitions/LanguageString" } },
         "tools":          { "type": "array", "items": { "$ref": "#/definitions/LanguageString" } }
       }
     },
@@ -101,7 +112,8 @@
       "required": ["type"],
       "properties": {
         "type": { "$ref": "#/definitions/DeploymentType" },
-        "url":  { "type": "string", "format": "uri" }
+        "url":  { "type": "string", "format": "uri" },
+        "active": { "type": "boolean", "description": "Whether this deployment is currently live." }
       },
       "anyOf": [
         {
@@ -118,11 +130,15 @@
     },
     "Deployment": {
       "type": "object",
-      "additionalProperties": false,
+      "description": "Map of deployment slot name (frontend, backend, docusaurus, …) to a DeploymentEntry. The slot name is a free-form kebab-case label; the value describes the deployment.",
       "properties": {
         "frontend": { "$ref": "#/definitions/DeploymentEntry" },
         "backend":  { "$ref": "#/definitions/DeploymentEntry" }
-      }
+      },
+      "patternProperties": {
+        "^[a-z][a-z0-9-]*$": { "$ref": "#/definitions/DeploymentEntry" }
+      },
+      "additionalProperties": false
     },
     "Demo": {
       "type": "object",

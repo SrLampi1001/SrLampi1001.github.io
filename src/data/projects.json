@@ -1,5 +1,366 @@
 [
   {
+    "id": "ai-assessment-test-1",
+    "name": "AI assessment test 1",
+    "description": "Dockerized n8n assistant for a foreign-languages academy — Telegram, email, and webhook channels, RAG context for schedules/prices/levels, embedding-similarity response caching, Redis, and PostgreSQL.",
+    "type": "automation",
+    "categories": [
+      "education",
+      "ai",
+      "assessment-test",
+      "module-4"
+    ],
+    "tags": [
+      "n8n",
+      "rag",
+      "redis",
+      "postgresql",
+      "telegram",
+      "email",
+      "webhook",
+      "gemini"
+    ],
+    "status": "completed",
+    "tech_stack": {
+      "frameworks": [
+        "n8n"
+      ],
+      "databases": [
+        "postgresql",
+        "redis"
+      ],
+      "ai": [
+        "gemini"
+      ],
+      "tools": [
+        "docker",
+        "telegram-bot",
+        "git"
+      ]
+    },
+    "repository": {
+      "provider": "github",
+      "owner": "SrLampi1001",
+      "name": "riwi_projects",
+      "branch": "project/ai_workflows/ai_assessment_test_1"
+    },
+    "documentation": {
+      "readme": true,
+      "documentation-folder": [
+        {
+          "path": "ai_workflows/ai_assessment_test_1"
+        }
+      ]
+    },
+    "_meta": {
+      "repo": "SrLampi1001/riwi_projects",
+      "path": "ai_workflows/ai_assessment_test_1/project.yml",
+      "branch": "main",
+      "url": "https://github.com/SrLampi1001/riwi_projects",
+      "html_url": "https://github.com/SrLampi1001/riwi_projects",
+      "parent_path": "ai_workflows/ai_assessment_test_1"
+    }
+  },
+  {
+    "id": "ai-assessment-test-2",
+    "name": "AI assessment test 2",
+    "description": "VoiceAgent — bilingual Spanish/English voice tutor built with React, Express, browser Speech APIs, NVIDIA NIM (Mistral) function calling for dictionary and translation tools, MongoDB session memory, and a pgvector-ready Postgres. The project is marked incomplete in its README.",
+    "type": "web-app",
+    "categories": [
+      "education",
+      "ai",
+      "assessment-test",
+      "module-4"
+    ],
+    "tags": [
+      "react",
+      "express",
+      "mongodb",
+      "postgresql",
+      "pgvector",
+      "voice",
+      "stt",
+      "tts",
+      "nvidia-nim",
+      "mistral"
+    ],
+    "status": "incomplete",
+    "tech_stack": {
+      "languages": [
+        "typescript",
+        "javascript"
+      ],
+      "frameworks": [
+        "react",
+        "vite",
+        "express"
+      ],
+      "databases": [
+        "mongodb",
+        "postgresql",
+        "pgvector"
+      ],
+      "ai": [
+        "nvidia-nim",
+        "mistral"
+      ],
+      "tools": [
+        "docker",
+        "web-speech-api",
+        "git"
+      ]
+    },
+    "repository": {
+      "provider": "github",
+      "owner": "SrLampi1001",
+      "name": "riwi_projects",
+      "branch": "project/ai_workflows/ai_assessment_test_2"
+    },
+    "documentation": {
+      "readme": true,
+      "documentation-folder": [
+        {
+          "path": "ai_workflows/ai_assessment_test_2"
+        }
+      ]
+    },
+    "_meta": {
+      "repo": "SrLampi1001/riwi_projects",
+      "path": "ai_workflows/ai_assessment_test_2/project.yml",
+      "branch": "main",
+      "url": "https://github.com/SrLampi1001/riwi_projects",
+      "html_url": "https://github.com/SrLampi1001/riwi_projects",
+      "parent_path": "ai_workflows/ai_assessment_test_2"
+    }
+  },
+  {
+    "id": "ai-assessment-test-simulacrum",
+    "name": "AI assessment test simulacrum",
+    "description": "Practice simulacrum for the AI module assessment test — an n8n workflow that automates multi-channel veterinary triage, urgency escalation, RAG-based responses, and metric logging. The project is marked incomplete in its README.",
+    "type": "automation",
+    "categories": [
+      "education",
+      "ai",
+      "assessment-test",
+      "module-4"
+    ],
+    "tags": [
+      "n8n",
+      "rag",
+      "vector-database",
+      "telegram",
+      "email",
+      "triage"
+    ],
+    "status": "incomplete",
+    "tech_stack": {
+      "tools": [
+        "n8n",
+        "docker",
+        "telegram-bot"
+      ],
+      "ai": [
+        "llm",
+        "rag"
+      ]
+    },
+    "repository": {
+      "provider": "github",
+      "owner": "SrLampi1001",
+      "name": "riwi_projects",
+      "branch": "project/ai_workflows/ai_assessment_test_simulacrum"
+    },
+    "documentation": {
+      "readme": true,
+      "documentation-folder": [
+        {
+          "path": "ai_workflows/ai_assessment_test_simulacrum"
+        }
+      ]
+    },
+    "_meta": {
+      "repo": "SrLampi1001/riwi_projects",
+      "path": "ai_workflows/ai_assessment_test_simulacrum/project.yml",
+      "branch": "main",
+      "url": "https://github.com/SrLampi1001/riwi_projects",
+      "html_url": "https://github.com/SrLampi1001/riwi_projects",
+      "parent_path": "ai_workflows/ai_assessment_test_simulacrum"
+    }
+  },
+  {
+    "id": "ai-workflows",
+    "name": "AI workflows",
+    "description": "AI-assisted applications and automation workflows created for the Riwi AI assessment tests, integrating n8n, LLMs, RAG, and conversational agents.",
+    "type": "collection",
+    "categories": [
+      "education",
+      "ai",
+      "automation"
+    ],
+    "tags": [
+      "n8n",
+      "llm",
+      "rag",
+      "voice",
+      "automation",
+      "module-4"
+    ],
+    "tech_stack": {
+      "languages": [
+        "python",
+        "javascript",
+        "typescript"
+      ],
+      "frameworks": [
+        "react",
+        "express",
+        "fastapi"
+      ],
+      "databases": [
+        "postgresql",
+        "mongodb",
+        "redis"
+      ],
+      "ai": [
+        "gemini",
+        "nvidia-nim",
+        "deepseek"
+      ],
+      "tools": [
+        "docker",
+        "n8n",
+        "telegram-bot",
+        "git"
+      ]
+    },
+    "repository": {
+      "provider": "github",
+      "owner": "SrLampi1001",
+      "name": "riwi_projects",
+      "branch": "project/ai_workflows"
+    },
+    "documentation": {
+      "readme": true,
+      "documentation-folder": [
+        {
+          "path": "ai_workflows"
+        }
+      ]
+    },
+    "presentation": {
+      "featured": true,
+      "order": 3
+    },
+    "_meta": {
+      "repo": "SrLampi1001/riwi_projects",
+      "path": "ai_workflows/project.yml",
+      "branch": "main",
+      "url": "https://github.com/SrLampi1001/riwi_projects",
+      "html_url": "https://github.com/SrLampi1001/riwi_projects",
+      "parent_path": "ai_workflows"
+    }
+  },
+  {
+    "id": "infrastructure",
+    "name": "Infrastructure",
+    "description": "Infrastructure-as-code and cloud-deployed projects where the deployment platform is the primary subject, including Azure, AWS, and Terraform setups.",
+    "type": "collection",
+    "categories": [
+      "education",
+      "infrastructure",
+      "cloud"
+    ],
+    "tags": [
+      "azure",
+      "terraform",
+      "iac",
+      "devops"
+    ],
+    "tech_stack": {
+      "tools": [
+        "terraform",
+        "azure",
+        "git"
+      ]
+    },
+    "repository": {
+      "provider": "github",
+      "owner": "SrLampi1001",
+      "name": "riwi_projects",
+      "branch": "project/infrastructure"
+    },
+    "documentation": {
+      "readme": true,
+      "documentation-folder": [
+        {
+          "path": "infrastructure"
+        }
+      ]
+    },
+    "presentation": {
+      "featured": false,
+      "order": 5
+    },
+    "_meta": {
+      "repo": "SrLampi1001/riwi_projects",
+      "path": "infrastructure/project.yml",
+      "branch": "main",
+      "url": "https://github.com/SrLampi1001/riwi_projects",
+      "html_url": "https://github.com/SrLampi1001/riwi_projects",
+      "parent_path": "infrastructure"
+    }
+  },
+  {
+    "id": "low-code",
+    "name": "Low code",
+    "description": "Low-code and no-code repositories: Obsidian vaults and configuration-only projects that pair with code repositories to provide narrative or non-technical context.",
+    "type": "collection",
+    "categories": [
+      "education",
+      "low-code",
+      "documentation"
+    ],
+    "tags": [
+      "obsidian",
+      "vault",
+      "wiki",
+      "narrative"
+    ],
+    "tech_stack": {
+      "tools": [
+        "obsidian",
+        "markdown",
+        "git"
+      ]
+    },
+    "repository": {
+      "provider": "github",
+      "owner": "SrLampi1001",
+      "name": "riwi_projects",
+      "branch": "project/low_code"
+    },
+    "documentation": {
+      "readme": true,
+      "documentation-folder": [
+        {
+          "path": "low_code"
+        }
+      ]
+    },
+    "presentation": {
+      "featured": false,
+      "order": 4
+    },
+    "_meta": {
+      "repo": "SrLampi1001/riwi_projects",
+      "path": "low_code/project.yml",
+      "branch": "main",
+      "url": "https://github.com/SrLampi1001/riwi_projects",
+      "html_url": "https://github.com/SrLampi1001/riwi_projects",
+      "parent_path": "low_code"
+    }
+  },
+  {
     "id": "riwi-projects",
     "name": "Riwi Projects",
     "description": "Monorepo of all small and medium-size projects made at Riwi outside of organizations, organized by training module as a collection of sub-collections and standalone projects.",
@@ -44,11 +405,1307 @@
       "branch": "main",
       "url": "https://github.com/SrLampi1001/riwi_projects",
       "html_url": "https://github.com/SrLampi1001/riwi_projects",
-      "description": "This repository consolidates and shows all the scattered small and medium size repositories made during Riwi training. Mainly composed of Python, JavaScript and web development frameworks",
-      "language": "JavaScript",
-      "pushed_at": "2026-09-28T13:27:28Z",
-      "stargazers_count": 0,
-      "default_branch": "main"
+      "parent_path": null
+    }
+  },
+  {
+    "id": "python-assessment-test-1",
+    "name": "Assessment test 1",
+    "description": "Module 1 final test — a console-based library system that manages inventory, customers, sales, and reporting entirely in memory.",
+    "type": "cli",
+    "categories": [
+      "education",
+      "python",
+      "assessment-test",
+      "module-1"
+    ],
+    "tags": [
+      "console",
+      "inventory",
+      "sales",
+      "reports",
+      "in-memory"
+    ],
+    "status": "completed",
+    "tech_stack": {
+      "languages": [
+        "python"
+      ],
+      "tools": [
+        "git"
+      ]
+    },
+    "repository": {
+      "provider": "github",
+      "owner": "SrLampi1001",
+      "name": "riwi_projects",
+      "branch": "project/python/assessment_test_1"
+    },
+    "documentation": {
+      "readme": true,
+      "documentation-folder": [
+        {
+          "path": "python/assessment_test_1"
+        }
+      ]
+    },
+    "_meta": {
+      "repo": "SrLampi1001/riwi_projects",
+      "path": "python/assessment_test_1/project.yml",
+      "branch": "main",
+      "url": "https://github.com/SrLampi1001/riwi_projects",
+      "html_url": "https://github.com/SrLampi1001/riwi_projects",
+      "parent_path": "python/assessment_test_1"
+    }
+  },
+  {
+    "id": "python-assessment-test-1-simulacrum",
+    "name": "Assessment test 1 simulacrum",
+    "description": "Python CLI with simulated async time that implements a role-based equipment lending system with CSV storage (Admin, Administrative, Instructor, Student).",
+    "type": "cli",
+    "categories": [
+      "education",
+      "python",
+      "assessment-test",
+      "module-1"
+    ],
+    "tags": [
+      "asyncio",
+      "csv",
+      "roles",
+      "authentication",
+      "lending"
+    ],
+    "status": "completed",
+    "tech_stack": {
+      "languages": [
+        "python"
+      ],
+      "tools": [
+        "git",
+        "csv",
+        "asyncio"
+      ]
+    },
+    "repository": {
+      "provider": "github",
+      "owner": "SrLampi1001",
+      "name": "riwi_projects",
+      "branch": "project/python/assessment_test_1_simulacrum"
+    },
+    "documentation": {
+      "readme": true,
+      "documentation-folder": [
+        {
+          "path": "python/assessment_test_1_simulacrum"
+        }
+      ]
+    },
+    "_meta": {
+      "repo": "SrLampi1001/riwi_projects",
+      "path": "python/assessment_test_1_simulacrum/project.yml",
+      "branch": "main",
+      "url": "https://github.com/SrLampi1001/riwi_projects",
+      "html_url": "https://github.com/SrLampi1001/riwi_projects",
+      "parent_path": "python/assessment_test_1_simulacrum"
+    }
+  },
+  {
+    "id": "python-grades-management",
+    "name": "Grades management workshop",
+    "description": "Module 1 workshop that accepts N grades, computes the average, and classifies the result. The grade validation rejects valid one-decimal grades (e.g. 2.3, 2.5, 3.3) due to a floating-point approximation error in the allowed-grades set.",
+    "type": "script",
+    "categories": [
+      "education",
+      "python",
+      "workshop",
+      "module-1"
+    ],
+    "tags": [
+      "fundamentals",
+      "validation",
+      "bug"
+    ],
+    "status": "incomplete",
+    "tech_stack": {
+      "languages": [
+        "python"
+      ],
+      "tools": [
+        "git"
+      ]
+    },
+    "repository": {
+      "provider": "github",
+      "owner": "SrLampi1001",
+      "name": "riwi_projects",
+      "branch": "project/python/grades_management_workshop"
+    },
+    "documentation": {
+      "readme": true,
+      "documentation-folder": [
+        {
+          "path": "python/grades_management_workshop"
+        }
+      ]
+    },
+    "_meta": {
+      "repo": "SrLampi1001/riwi_projects",
+      "path": "python/grades_management_workshop/project.yml",
+      "branch": "main",
+      "url": "https://github.com/SrLampi1001/riwi_projects",
+      "html_url": "https://github.com/SrLampi1001/riwi_projects",
+      "parent_path": "python/grades_management_workshop"
+    }
+  },
+  {
+    "id": "python-mini-projects",
+    "name": "Mini-projects",
+    "description": "A collection of ten small Python scripts (library, to-do, calculator, e-commerce, recipes, banking, theater, students, guessing game, expenses). 3 of 10 are currently implemented; the README also contains an unresolved merge conflict that needs cleanup.",
+    "type": "script",
+    "categories": [
+      "education",
+      "python",
+      "mini-project",
+      "module-1"
+    ],
+    "tags": [
+      "fundamentals",
+      "collections",
+      "console",
+      "multi-script"
+    ],
+    "status": "in progress",
+    "tech_stack": {
+      "languages": [
+        "python"
+      ],
+      "tools": [
+        "git"
+      ]
+    },
+    "repository": {
+      "provider": "github",
+      "owner": "SrLampi1001",
+      "name": "riwi_projects",
+      "branch": "project/python/mini-projects"
+    },
+    "documentation": {
+      "readme": true,
+      "documentation-folder": [
+        {
+          "path": "python/mini-projects"
+        }
+      ]
+    },
+    "_meta": {
+      "repo": "SrLampi1001/riwi_projects",
+      "path": "python/mini-projects/project.yml",
+      "branch": "main",
+      "url": "https://github.com/SrLampi1001/riwi_projects",
+      "html_url": "https://github.com/SrLampi1001/riwi_projects",
+      "parent_path": "python/mini-projects"
+    }
+  },
+  {
+    "id": "python",
+    "name": "Python projects",
+    "description": "Python fundamentals, user stories, workshops, mini-projects, and the first module's assessment test, all from Riwi Module 1.",
+    "type": "collection",
+    "categories": [
+      "education",
+      "python",
+      "module-1"
+    ],
+    "tags": [
+      "fundamentals",
+      "scripting",
+      "console"
+    ],
+    "tech_stack": {
+      "languages": [
+        "python"
+      ],
+      "tools": [
+        "git"
+      ]
+    },
+    "repository": {
+      "provider": "github",
+      "owner": "SrLampi1001",
+      "name": "riwi_projects",
+      "branch": "project/python"
+    },
+    "documentation": {
+      "readme": true,
+      "documentation-folder": [
+        {
+          "path": "python"
+        }
+      ]
+    },
+    "presentation": {
+      "featured": true,
+      "order": 1
+    },
+    "_meta": {
+      "repo": "SrLampi1001/riwi_projects",
+      "path": "python/project.yml",
+      "branch": "main",
+      "url": "https://github.com/SrLampi1001/riwi_projects",
+      "html_url": "https://github.com/SrLampi1001/riwi_projects",
+      "parent_path": "python"
+    }
+  },
+  {
+    "id": "python-user-story-1",
+    "name": "User Story 1",
+    "description": "First user story from Module 1 — registers products with name, price, and stock, then calculates total units and estimated cost.",
+    "type": "script",
+    "categories": [
+      "education",
+      "python",
+      "user-story",
+      "module-1"
+    ],
+    "tags": [
+      "fundamentals",
+      "variables",
+      "math"
+    ],
+    "status": "completed",
+    "tech_stack": {
+      "languages": [
+        "python"
+      ],
+      "tools": [
+        "git"
+      ]
+    },
+    "repository": {
+      "provider": "github",
+      "owner": "SrLampi1001",
+      "name": "riwi_projects",
+      "branch": "project/python/user_story_1"
+    },
+    "documentation": {
+      "readme": true,
+      "documentation-folder": [
+        {
+          "path": "python/user_story_1"
+        }
+      ]
+    },
+    "_meta": {
+      "repo": "SrLampi1001/riwi_projects",
+      "path": "python/user_story_1/project.yml",
+      "branch": "main",
+      "url": "https://github.com/SrLampi1001/riwi_projects",
+      "html_url": "https://github.com/SrLampi1001/riwi_projects",
+      "parent_path": "python/user_story_1"
+    }
+  },
+  {
+    "id": "python-user-story-2",
+    "name": "User Story 2",
+    "description": "Second user story from Module 1 — manages an in-memory product inventory through an interactive menu with statistics and input validation.",
+    "type": "script",
+    "categories": [
+      "education",
+      "python",
+      "user-story",
+      "module-1"
+    ],
+    "tags": [
+      "fundamentals",
+      "lists",
+      "dictionaries",
+      "loops",
+      "conditionals",
+      "console"
+    ],
+    "status": "completed",
+    "tech_stack": {
+      "languages": [
+        "python"
+      ],
+      "tools": [
+        "git"
+      ]
+    },
+    "repository": {
+      "provider": "github",
+      "owner": "SrLampi1001",
+      "name": "riwi_projects",
+      "branch": "project/python/user_story_2"
+    },
+    "documentation": {
+      "readme": true,
+      "documentation-folder": [
+        {
+          "path": "python/user_story_2"
+        }
+      ]
+    },
+    "_meta": {
+      "repo": "SrLampi1001/riwi_projects",
+      "path": "python/user_story_2/project.yml",
+      "branch": "main",
+      "url": "https://github.com/SrLampi1001/riwi_projects",
+      "html_url": "https://github.com/SrLampi1001/riwi_projects",
+      "parent_path": "python/user_story_2"
+    }
+  },
+  {
+    "id": "python-user-story-3",
+    "name": "User Story 3",
+    "description": "Third user story from Module 1 — modular CSV-backed inventory with CRUD operations, statistics, validation, and error management.",
+    "type": "script",
+    "categories": [
+      "education",
+      "python",
+      "user-story",
+      "module-1"
+    ],
+    "tags": [
+      "modules",
+      "csv",
+      "persistence",
+      "crud",
+      "statistics"
+    ],
+    "status": "completed",
+    "tech_stack": {
+      "languages": [
+        "python"
+      ],
+      "tools": [
+        "git",
+        "csv"
+      ]
+    },
+    "repository": {
+      "provider": "github",
+      "owner": "SrLampi1001",
+      "name": "riwi_projects",
+      "branch": "project/python/user_story_3"
+    },
+    "documentation": {
+      "readme": true,
+      "documentation-folder": [
+        {
+          "path": "python/user_story_3"
+        }
+      ]
+    },
+    "_meta": {
+      "repo": "SrLampi1001/riwi_projects",
+      "path": "python/user_story_3/project.yml",
+      "branch": "main",
+      "url": "https://github.com/SrLampi1001/riwi_projects",
+      "html_url": "https://github.com/SrLampi1001/riwi_projects",
+      "parent_path": "python/user_story_3"
+    }
+  },
+  {
+    "id": "python-workshop-1",
+    "name": "Python Workshop 1",
+    "description": "Eighteen short Python exercises covering conditionals, loops, strings, and functions, executed consecutively in a single script.",
+    "type": "script",
+    "categories": [
+      "education",
+      "python",
+      "workshop",
+      "module-1"
+    ],
+    "tags": [
+      "fundamentals",
+      "conditionals",
+      "loops",
+      "functions",
+      "console"
+    ],
+    "status": "completed",
+    "tech_stack": {
+      "languages": [
+        "python"
+      ],
+      "tools": [
+        "git"
+      ]
+    },
+    "repository": {
+      "provider": "github",
+      "owner": "SrLampi1001",
+      "name": "riwi_projects",
+      "branch": "project/python/workshop_1"
+    },
+    "documentation": {
+      "readme": true,
+      "documentation-folder": [
+        {
+          "path": "python/workshop_1"
+        }
+      ]
+    },
+    "_meta": {
+      "repo": "SrLampi1001/riwi_projects",
+      "path": "python/workshop_1/project.yml",
+      "branch": "main",
+      "url": "https://github.com/SrLampi1001/riwi_projects",
+      "html_url": "https://github.com/SrLampi1001/riwi_projects",
+      "parent_path": "python/workshop_1"
+    }
+  },
+  {
+    "id": "python-workshop-2",
+    "name": "Python Workshop 2",
+    "description": "Module 1 Workshop 2 — a single Python script that registers, lists, searches, updates, and removes inventory products.",
+    "type": "script",
+    "categories": [
+      "education",
+      "python",
+      "workshop",
+      "module-1"
+    ],
+    "tags": [
+      "fundamentals",
+      "crud",
+      "inventory",
+      "console"
+    ],
+    "status": "completed",
+    "tech_stack": {
+      "languages": [
+        "python"
+      ],
+      "tools": [
+        "git"
+      ]
+    },
+    "repository": {
+      "provider": "github",
+      "owner": "SrLampi1001",
+      "name": "riwi_projects",
+      "branch": "project/python/workshop_2"
+    },
+    "documentation": {
+      "readme": true,
+      "documentation-folder": [
+        {
+          "path": "python/workshop_2"
+        }
+      ]
+    },
+    "_meta": {
+      "repo": "SrLampi1001/riwi_projects",
+      "path": "python/workshop_2/project.yml",
+      "branch": "main",
+      "url": "https://github.com/SrLampi1001/riwi_projects",
+      "html_url": "https://github.com/SrLampi1001/riwi_projects",
+      "parent_path": "python/workshop_2"
+    }
+  },
+  {
+    "id": "web-assessment-test-2",
+    "name": "Assessment test 2",
+    "description": "Module 2 assessment test — responsive recreation of the Clipboard product landing page using semantic HTML, external CSS with Google Fonts, and Flexbox/CSS Grid for desktop, tablet, and phone breakpoints.",
+    "type": "static-site",
+    "categories": [
+      "education",
+      "web",
+      "assessment-test",
+      "module-2"
+    ],
+    "tags": [
+      "html",
+      "css",
+      "responsive",
+      "flexbox",
+      "css-grid",
+      "landing-page"
+    ],
+    "status": "completed",
+    "tech_stack": {
+      "languages": [
+        "html",
+        "css"
+      ],
+      "tools": [
+        "git",
+        "google-fonts"
+      ]
+    },
+    "repository": {
+      "provider": "github",
+      "owner": "SrLampi1001",
+      "name": "riwi_projects",
+      "branch": "project/web/assessment_test_2"
+    },
+    "documentation": {
+      "readme": true,
+      "documentation-folder": [
+        {
+          "path": "webprojects/assessment_test_2"
+        }
+      ]
+    },
+    "_meta": {
+      "repo": "SrLampi1001/riwi_projects",
+      "path": "webprojects/assessment_test_2/project.yml",
+      "branch": "main",
+      "url": "https://github.com/SrLampi1001/riwi_projects",
+      "html_url": "https://github.com/SrLampi1001/riwi_projects",
+      "parent_path": "webprojects/assessment_test_2"
+    }
+  },
+  {
+    "id": "web-assessment-test-3",
+    "name": "Assessment test 3",
+    "description": "CRUDZASO — role-based task management web app with admin and user views, status and priority tracking, and JSON Server as the mock REST API. User-facing settings and full user functionality are still pending; this iteration is in active development.",
+    "type": "web-app",
+    "categories": [
+      "education",
+      "web",
+      "assessment-test",
+      "module-3"
+    ],
+    "tags": [
+      "html",
+      "css",
+      "javascript",
+      "bootstrap",
+      "json-server",
+      "crud",
+      "auth",
+      "task-management"
+    ],
+    "status": "in progress",
+    "tech_stack": {
+      "languages": [
+        "html",
+        "css",
+        "javascript"
+      ],
+      "frameworks": [
+        "bootstrap",
+        "json-server"
+      ],
+      "tools": [
+        "node",
+        "git"
+      ]
+    },
+    "repository": {
+      "provider": "github",
+      "owner": "SrLampi1001",
+      "name": "riwi_projects",
+      "branch": "project/web/assessment_test_3"
+    },
+    "documentation": {
+      "readme": true,
+      "documentation-folder": [
+        {
+          "path": "webprojects/assessment_test_3"
+        }
+      ]
+    },
+    "_meta": {
+      "repo": "SrLampi1001/riwi_projects",
+      "path": "webprojects/assessment_test_3/project.yml",
+      "branch": "main",
+      "url": "https://github.com/SrLampi1001/riwi_projects",
+      "html_url": "https://github.com/SrLampi1001/riwi_projects",
+      "parent_path": "webprojects/assessment_test_3"
+    }
+  },
+  {
+    "id": "web-assessment-test-3-simulacrum",
+    "name": "Assessment test 3 simulacrum",
+    "description": "RestorApp — restaurant food ordering web application with multi-channel authentication, category-based menu, cart, order history, and an admin dashboard backed by JSON Server.",
+    "type": "web-app",
+    "categories": [
+      "education",
+      "web",
+      "assessment-test",
+      "module-3"
+    ],
+    "tags": [
+      "html",
+      "css",
+      "javascript",
+      "bootstrap",
+      "json-server",
+      "es6-modules",
+      "crud",
+      "auth"
+    ],
+    "status": "completed",
+    "tech_stack": {
+      "languages": [
+        "html",
+        "css",
+        "javascript"
+      ],
+      "frameworks": [
+        "bootstrap",
+        "json-server"
+      ],
+      "tools": [
+        "node",
+        "git"
+      ]
+    },
+    "repository": {
+      "provider": "github",
+      "owner": "SrLampi1001",
+      "name": "riwi_projects",
+      "branch": "project/web/assessment_test_3_simulacrum"
+    },
+    "documentation": {
+      "readme": true,
+      "documentation-folder": [
+        {
+          "path": "webprojects/assessment_test_3_simulacrum"
+        }
+      ]
+    },
+    "_meta": {
+      "repo": "SrLampi1001/riwi_projects",
+      "path": "webprojects/assessment_test_3_simulacrum/project.yml",
+      "branch": "main",
+      "url": "https://github.com/SrLampi1001/riwi_projects",
+      "html_url": "https://github.com/SrLampi1001/riwi_projects",
+      "parent_path": "webprojects/assessment_test_3_simulacrum"
+    }
+  },
+  {
+    "id": "web-assessment-test-4",
+    "name": "Assessment test 4",
+    "description": "Express backend that ingests a CSV file via Multer, normalizes it into a MySQL schema, and logs activity in MongoDB. The project is flagged as UNCOMPLETED in its README and is not finished.",
+    "type": "api",
+    "categories": [
+      "education",
+      "web",
+      "assessment-test",
+      "module-3"
+    ],
+    "tags": [
+      "nodejs",
+      "express",
+      "mysql",
+      "mongodb",
+      "csv",
+      "multer"
+    ],
+    "status": "incomplete",
+    "tech_stack": {
+      "languages": [
+        "javascript",
+        "sql"
+      ],
+      "frameworks": [
+        "express"
+      ],
+      "databases": [
+        "mysql",
+        "mongodb"
+      ],
+      "tools": [
+        "csv-parse",
+        "multer",
+        "dotenv",
+        "mysql2",
+        "git"
+      ]
+    },
+    "repository": {
+      "provider": "github",
+      "owner": "SrLampi1001",
+      "name": "riwi_projects",
+      "branch": "project/web/assessment_test_4"
+    },
+    "documentation": {
+      "readme": true,
+      "documentation-folder": [
+        {
+          "path": "webprojects/assessment_test_4/docs"
+        },
+        {
+          "path": "webprojects/assessment_test_4/uploads"
+        }
+      ]
+    },
+    "_meta": {
+      "repo": "SrLampi1001/riwi_projects",
+      "path": "webprojects/assessment_test_4/project.yml",
+      "branch": "main",
+      "url": "https://github.com/SrLampi1001/riwi_projects",
+      "html_url": "https://github.com/SrLampi1001/riwi_projects",
+      "parent_path": "webprojects/assessment_test_4"
+    }
+  },
+  {
+    "id": "web-docusaurus-documentation",
+    "name": "Docusaurus documentation",
+    "description": "Docusaurus site that complements the portfolio with the technical side of the Riwi projects (what each project is, how it is built, how to run it, illustrative notes).",
+    "type": "documentation",
+    "categories": [
+      "education",
+      "web",
+      "documentation",
+      "module-3"
+    ],
+    "tags": [
+      "docusaurus",
+      "docs",
+      "static-site"
+    ],
+    "status": "completed",
+    "tech_stack": {
+      "frameworks": [
+        "docusaurus"
+      ],
+      "tools": [
+        "node",
+        "git"
+      ]
+    },
+    "repository": {
+      "provider": "github",
+      "owner": "SrLampi1001",
+      "name": "riwi_projects",
+      "branch": "project/web/docusaurus_documentation"
+    },
+    "documentation": {
+      "readme": true,
+      "documentation-folder": [
+        {
+          "path": "webprojects/docusaurus_documentation"
+        }
+      ]
+    },
+    "deployment": {
+      "docusaurus": {
+        "type": "static-site",
+        "url": "https://srlampidocs.web.app/",
+        "active": true
+      }
+    },
+    "_meta": {
+      "repo": "SrLampi1001/riwi_projects",
+      "path": "webprojects/docusaurus_documentation/project.yml",
+      "branch": "main",
+      "url": "https://github.com/SrLampi1001/riwi_projects",
+      "html_url": "https://github.com/SrLampi1001/riwi_projects",
+      "parent_path": "webprojects/docusaurus_documentation"
+    }
+  },
+  {
+    "id": "web-express-mysql-practice",
+    "name": "Express MySQL practice",
+    "description": "Express REST API organized by model/service/controller/route that queries users, orders, products, and reports from MySQL through a promise-based connection pool.",
+    "type": "api",
+    "categories": [
+      "education",
+      "web",
+      "backend",
+      "module-3"
+    ],
+    "tags": [
+      "nodejs",
+      "express",
+      "mysql",
+      "rest-api",
+      "clean-architecture"
+    ],
+    "status": "completed",
+    "tech_stack": {
+      "languages": [
+        "javascript",
+        "sql"
+      ],
+      "frameworks": [
+        "express"
+      ],
+      "databases": [
+        "mysql"
+      ],
+      "tools": [
+        "dotenv",
+        "mysql2",
+        "git"
+      ]
+    },
+    "repository": {
+      "provider": "github",
+      "owner": "SrLampi1001",
+      "name": "riwi_projects",
+      "branch": "project/web/express_mysql_practice"
+    },
+    "documentation": {
+      "readme": true,
+      "documentation-folder": [
+        {
+          "path": "webprojects/express_mysql_practice"
+        }
+      ]
+    },
+    "_meta": {
+      "repo": "SrLampi1001/riwi_projects",
+      "path": "webprojects/express_mysql_practice/project.yml",
+      "branch": "main",
+      "url": "https://github.com/SrLampi1001/riwi_projects",
+      "html_url": "https://github.com/SrLampi1001/riwi_projects",
+      "parent_path": "webprojects/express_mysql_practice"
+    }
+  },
+  {
+    "id": "web-form-only-css-html",
+    "name": "HTML and CSS form",
+    "description": "Static form built only with HTML and CSS, no JavaScript and no libraries, demonstrating basic semantic structure and external stylesheets.",
+    "type": "static-site",
+    "categories": [
+      "education",
+      "web",
+      "form",
+      "module-2"
+    ],
+    "tags": [
+      "html",
+      "css",
+      "semantics",
+      "no-js"
+    ],
+    "status": "completed",
+    "tech_stack": {
+      "languages": [
+        "html",
+        "css"
+      ],
+      "tools": [
+        "git"
+      ]
+    },
+    "repository": {
+      "provider": "github",
+      "owner": "SrLampi1001",
+      "name": "riwi_projects",
+      "branch": "project/web/form_only_css_html"
+    },
+    "documentation": {
+      "readme": true,
+      "documentation-folder": [
+        {
+          "path": "webprojects/form_only_css_html"
+        }
+      ]
+    },
+    "_meta": {
+      "repo": "SrLampi1001/riwi_projects",
+      "path": "webprojects/form_only_css_html/project.yml",
+      "branch": "main",
+      "url": "https://github.com/SrLampi1001/riwi_projects",
+      "html_url": "https://github.com/SrLampi1001/riwi_projects",
+      "parent_path": "webprojects/form_only_css_html"
+    }
+  },
+  {
+    "id": "web-kfc",
+    "name": "KFC frontend",
+    "description": "Static web project simulating a KFC restaurant menu with theme switching (light, dark, rainbow), Spanish/English language toggling, simple login, session handling, and Bootstrap 5 styling.",
+    "type": "static-site",
+    "categories": [
+      "education",
+      "web",
+      "frontend",
+      "module-3"
+    ],
+    "tags": [
+      "html",
+      "css",
+      "javascript",
+      "bootstrap",
+      "i18n",
+      "localstorage",
+      "sessionstorage"
+    ],
+    "status": "completed",
+    "tech_stack": {
+      "languages": [
+        "html",
+        "css",
+        "javascript"
+      ],
+      "frameworks": [
+        "bootstrap"
+      ],
+      "tools": [
+        "git"
+      ]
+    },
+    "repository": {
+      "provider": "github",
+      "owner": "SrLampi1001",
+      "name": "riwi_projects",
+      "branch": "project/web/kfc"
+    },
+    "documentation": {
+      "readme": true,
+      "documentation-folder": [
+        {
+          "path": "webprojects/kfc"
+        }
+      ]
+    },
+    "_meta": {
+      "repo": "SrLampi1001/riwi_projects",
+      "path": "webprojects/kfc/project.yml",
+      "branch": "main",
+      "url": "https://github.com/SrLampi1001/riwi_projects",
+      "html_url": "https://github.com/SrLampi1001/riwi_projects",
+      "parent_path": "webprojects/kfc"
+    }
+  },
+  {
+    "id": "webprojects",
+    "name": "Web projects",
+    "description": "Frontend, backend, and full-stack web applications from Riwi Modules 2 and 3, including HTML/CSS exercises, Node.js + Express APIs, and documentation frameworks.",
+    "type": "collection",
+    "categories": [
+      "education",
+      "web",
+      "fullstack"
+    ],
+    "tags": [
+      "frontend",
+      "backend",
+      "static-site",
+      "api",
+      "module-2",
+      "module-3"
+    ],
+    "tech_stack": {
+      "languages": [
+        "html",
+        "css",
+        "javascript",
+        "sql"
+      ],
+      "frameworks": [
+        "express",
+        "bootstrap",
+        "docusaurus"
+      ],
+      "databases": [
+        "mysql",
+        "mongodb"
+      ],
+      "tools": [
+        "json-server",
+        "git"
+      ]
+    },
+    "repository": {
+      "provider": "github",
+      "owner": "SrLampi1001",
+      "name": "riwi_projects",
+      "branch": "project/web"
+    },
+    "documentation": {
+      "readme": true,
+      "documentation-folder": [
+        {
+          "path": "webprojects"
+        }
+      ]
+    },
+    "presentation": {
+      "featured": true,
+      "order": 2
+    },
+    "_meta": {
+      "repo": "SrLampi1001/riwi_projects",
+      "path": "webprojects/project.yml",
+      "branch": "main",
+      "url": "https://github.com/SrLampi1001/riwi_projects",
+      "html_url": "https://github.com/SrLampi1001/riwi_projects",
+      "parent_path": "webprojects"
+    }
+  },
+  {
+    "id": "web-simple-storage",
+    "name": "Simple Storage",
+    "description": "Module 3 user story — small full-stack application that performs user CRUD through a vanilla HTML/CSS/JS frontend and a json-server mock REST API.",
+    "type": "web-app",
+    "categories": [
+      "education",
+      "web",
+      "fullstack",
+      "module-3"
+    ],
+    "tags": [
+      "javascript",
+      "html",
+      "css",
+      "json-server",
+      "crud"
+    ],
+    "status": "completed",
+    "tech_stack": {
+      "languages": [
+        "html",
+        "css",
+        "javascript"
+      ],
+      "frameworks": [
+        "json-server"
+      ],
+      "databases": [
+        "json"
+      ],
+      "tools": [
+        "node",
+        "git"
+      ]
+    },
+    "repository": {
+      "provider": "github",
+      "owner": "SrLampi1001",
+      "name": "riwi_projects",
+      "branch": "project/web/simple_storage"
+    },
+    "documentation": {
+      "readme": true,
+      "documentation-folder": [
+        {
+          "path": "webprojects/simple_storage"
+        }
+      ]
+    },
+    "_meta": {
+      "repo": "SrLampi1001/riwi_projects",
+      "path": "webprojects/simple_storage/project.yml",
+      "branch": "main",
+      "url": "https://github.com/SrLampi1001/riwi_projects",
+      "html_url": "https://github.com/SrLampi1001/riwi_projects",
+      "parent_path": "webprojects/simple_storage"
+    }
+  },
+  {
+    "id": "web-user-story-4",
+    "name": "User Story 4",
+    "description": "Module 3 user story 1 — interactive JavaScript that greets users by name, validates their age, and reports whether they are a minor or an adult using prompts, alerts, and try-catch error handling.",
+    "type": "script",
+    "categories": [
+      "education",
+      "web",
+      "user-story",
+      "module-3"
+    ],
+    "tags": [
+      "javascript",
+      "dom",
+      "prompts",
+      "validation"
+    ],
+    "status": "completed",
+    "tech_stack": {
+      "languages": [
+        "javascript"
+      ],
+      "tools": [
+        "git"
+      ]
+    },
+    "repository": {
+      "provider": "github",
+      "owner": "SrLampi1001",
+      "name": "riwi_projects",
+      "branch": "project/web/user_story_4"
+    },
+    "documentation": {
+      "readme": true,
+      "documentation-folder": [
+        {
+          "path": "webprojects/user_story_4"
+        }
+      ]
+    },
+    "_meta": {
+      "repo": "SrLampi1001/riwi_projects",
+      "path": "webprojects/user_story_4/project.yml",
+      "branch": "main",
+      "url": "https://github.com/SrLampi1001/riwi_projects",
+      "html_url": "https://github.com/SrLampi1001/riwi_projects",
+      "parent_path": "webprojects/user_story_4"
+    }
+  },
+  {
+    "id": "web-user-story-5",
+    "name": "User Story 5",
+    "description": "Module 3 user story 2 — demonstrates JavaScript data structures (Set, Map, Object) through a Productos class with a static ID counter and object utility methods.",
+    "type": "script",
+    "categories": [
+      "education",
+      "web",
+      "user-story",
+      "module-3"
+    ],
+    "tags": [
+      "javascript",
+      "data-structures",
+      "set",
+      "map"
+    ],
+    "status": "completed",
+    "tech_stack": {
+      "languages": [
+        "javascript"
+      ],
+      "tools": [
+        "node",
+        "git"
+      ]
+    },
+    "repository": {
+      "provider": "github",
+      "owner": "SrLampi1001",
+      "name": "riwi_projects",
+      "branch": "project/web/user_story_5"
+    },
+    "documentation": {
+      "readme": true,
+      "documentation-folder": [
+        {
+          "path": "webprojects/user_story_5"
+        }
+      ]
+    },
+    "_meta": {
+      "repo": "SrLampi1001/riwi_projects",
+      "path": "webprojects/user_story_5/project.yml",
+      "branch": "main",
+      "url": "https://github.com/SrLampi1001/riwi_projects",
+      "html_url": "https://github.com/SrLampi1001/riwi_projects",
+      "parent_path": "webprojects/user_story_5"
+    }
+  },
+  {
+    "id": "web-user-story-6",
+    "name": "User Story 6",
+    "description": "Module 3 user story 3 — Kepler 22b forum with account and post CRUD operations, persisted through JSON Server and local storage, themed around the Sinteryum/Dartumbria/Midnight Twilight lore.",
+    "type": "web-app",
+    "categories": [
+      "education",
+      "web",
+      "user-story",
+      "module-3"
+    ],
+    "tags": [
+      "html",
+      "css",
+      "javascript",
+      "json-server",
+      "crud",
+      "forum",
+      "localstorage"
+    ],
+    "status": "completed",
+    "tech_stack": {
+      "languages": [
+        "html",
+        "css",
+        "javascript"
+      ],
+      "frameworks": [
+        "json-server"
+      ],
+      "tools": [
+        "node",
+        "git"
+      ]
+    },
+    "repository": {
+      "provider": "github",
+      "owner": "SrLampi1001",
+      "name": "riwi_projects",
+      "branch": "project/web/user_story_6"
+    },
+    "documentation": {
+      "readme": true,
+      "documentation-folder": [
+        {
+          "path": "webprojects/user_story_6"
+        }
+      ]
+    },
+    "_meta": {
+      "repo": "SrLampi1001/riwi_projects",
+      "path": "webprojects/user_story_6/project.yml",
+      "branch": "main",
+      "url": "https://github.com/SrLampi1001/riwi_projects",
+      "html_url": "https://github.com/SrLampi1001/riwi_projects",
+      "parent_path": "webprojects/user_story_6"
+    }
+  },
+  {
+    "id": "web-user-story-7",
+    "name": "User Story 7",
+    "description": "Module 3 user story 4 — expansion of the Kepler 22b forum with persisted users, authentication, and post management backed by JSON Server and local storage.",
+    "type": "web-app",
+    "categories": [
+      "education",
+      "web",
+      "user-story",
+      "module-3"
+    ],
+    "tags": [
+      "html",
+      "css",
+      "javascript",
+      "json-server",
+      "crud",
+      "forum",
+      "auth",
+      "localstorage"
+    ],
+    "status": "completed",
+    "tech_stack": {
+      "languages": [
+        "html",
+        "css",
+        "javascript"
+      ],
+      "frameworks": [
+        "json-server"
+      ],
+      "tools": [
+        "node",
+        "git"
+      ]
+    },
+    "repository": {
+      "provider": "github",
+      "owner": "SrLampi1001",
+      "name": "riwi_projects",
+      "branch": "project/web/user_story_7"
+    },
+    "documentation": {
+      "readme": true,
+      "documentation-folder": [
+        {
+          "path": "webprojects/user_story_7"
+        }
+      ]
+    },
+    "_meta": {
+      "repo": "SrLampi1001/riwi_projects",
+      "path": "webprojects/user_story_7/project.yml",
+      "branch": "main",
+      "url": "https://github.com/SrLampi1001/riwi_projects",
+      "html_url": "https://github.com/SrLampi1001/riwi_projects",
+      "parent_path": "webprojects/user_story_7"
     }
   }
 ]
