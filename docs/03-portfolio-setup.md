@@ -1,11 +1,8 @@
 # 03 — Portfolio Setup (Astro)
 
-This document describes how the Astro application is structured, how it
-discovers projects, and how it generates the static pages.
+This document describes how the Astro application is structured, how it discovers projects, and how it generates the static pages.
 
-The portfolio uses **Astro 7.3.x** (the current stable line as of late 2026)
-with `output: 'static'` and Content Collections driven by the `glob()` loader
-over a directory of pre-cloned `project.yml` files.
+The portfolio uses **Astro 7.3.x** (the current stable line as of late 2026) with `output: 'static'` and Content Collections driven by the `glob()` loader over a directory of pre-cloned `project.yml` files.
 
 ---
 
@@ -15,14 +12,11 @@ The Astro application in this repository must:
 
 - Discover every `project.yml` from every indexed repository.
 - Validate each one against the contract in [02](./02-project-yml-contract.md).
-- Render project pages, category pages, tag pages and technology-filtered
-  pages automatically.
+- Render project pages, category pages, tag pages and technology-filtered   pages automatically.
 - Render cards on the index page with filtering, sorting and search.
 - Embed the appropriate demo for projects that opt in.
-- Produce a fully static `dist/` directory that can be served from GitHub
-  Pages.
-- Be fast: the build should complete in well under a minute even as the
-  number of indexed projects grows to several dozen.
+- Produce a fully static `dist/` directory that can be served from GitHub   Pages.
+- Be fast: the build should complete in well under a minute even as the   number of indexed projects grows to several dozen.
 
 ---
 
@@ -42,9 +36,7 @@ The Astro application in this repository must:
 | Package manager | **npm** (or pnpm, if preferred). |
 | Node | **20 LTS** or **22 LTS**. |
 
-No CSS framework (Tailwind, Bootstrap, etc.) is required. The visual layer is
-plain CSS with custom properties, optionally aided by
-[Open Props](https://open-props.style/) for design tokens.
+No CSS framework (Tailwind, Bootstrap, etc.) is required. The visual layer is plain CSS with custom properties, optionally aided by [Open Props](https://open-props.style/) for design tokens.
 
 ---
 
@@ -107,9 +99,7 @@ SrLampi1001.github.io/
         └── validate-yml.yml        # per-repo validation (optional)
 ```
 
-`src/data/projects/` and `src/content/projects/` are **generated** at build
-time by the discovery workflow. They are written into `.gitignore` and
-re-populated on every CI execution.
+`src/data/projects/` and `src/content/projects/` are **generated** at build time by the discovery workflow. They are written into `.gitignore` and re-populated on every CI execution.
 
 ---
 
@@ -140,8 +130,7 @@ export default defineConfig({
 });
 ```
 
-If a custom domain is used, replace `site` with the apex domain and ensure
-`public/CNAME` exists (see [04](./04-deployment.md)).
+If a custom domain is used, replace `site` with the apex domain and ensure `public/CNAME` exists (see [04](./04-deployment.md)).
 
 ---
 
@@ -169,9 +158,7 @@ If a custom domain is used, replace `site` with the apex domain and ensure
 
 ## 6. Content Collections schema (`src/content.config.ts`)
 
-The collection schema **mirrors** the contract from
-[02 — The `project.yml` Contract](./02-project-yml-contract.md). It is the
-runtime enforcement of the contract.
+The collection schema **mirrors** the contract from [02 — The `project.yml` Contract](./02-project-yml-contract.md). It is the runtime enforcement of the contract.
 
 ```ts
 import { defineCollection, z } from 'astro:content';
@@ -266,8 +253,7 @@ const projects = defineCollection({
 export const collections = { projects };
 ```
 
-This file is the **single source of truth** for what a `project.yml` is
-allowed to contain. The same Zod schema is used by:
+This file is the **single source of truth** for what a `project.yml` is allowed to contain. The same Zod schema is used by:
 
 - the Astro build (validates every project as it is read);
 - the per-repo CI validation action (so authors catch errors early);
@@ -277,8 +263,7 @@ allowed to contain. The same Zod schema is used by:
 
 ## 7. Discovery workflow
 
-The Astro build does **not** fetch repositories on its own. A pre-build step
-populates `./src/data/projects/` with one directory per indexed repository:
+The Astro build does **not** fetch repositories on its own. A pre-build step populates `./src/data/projects/` with one directory per indexed repository:
 
 ```text
 src/data/projects/
@@ -296,8 +281,7 @@ src/data/projects/
 
 ### 7.1 `scripts/fetch-projects.mjs`
 
-A Node script that, given a list of repositories, clones (or fetches) each
-one into `src/data/projects/<repo-name>/`. Implementation outline:
+A Node script that, given a list of repositories, clones (or fetches) each one into `src/data/projects/<repo-name>/`. Implementation outline:
 
 ```js
 import { $ } from 'execa';
@@ -329,9 +313,7 @@ await Promise.all(
 );
 ```
 
-`sparse-checkout` keeps only the `project.yml` files (at any depth), which is
-exactly what the portfolio needs. The clones are shallow (`--depth 1`) to
-minimise data transfer.
+`sparse-checkout` keeps only the `project.yml` files (at any depth), which is exactly what the portfolio needs. The clones are shallow (`--depth 1`) to minimise data transfer.
 
 ### 7.2 Calling it
 
@@ -343,15 +325,13 @@ node scripts/fetch-projects.mjs
 - run: node scripts/fetch-projects.mjs
 ```
 
-`src/data/projects/` is in `.gitignore` and never committed. The CI runner
-re-clones on every build.
+`src/data/projects/` is in `.gitignore` and never committed. The CI runner re-clones on every build.
 
 ---
 
 ## 8. Dynamic routing: project pages
 
-`src/pages/projects/[id].astro` renders one page per project. It uses Astro's
-`getStaticPaths()` to enumerate every project in the collection:
+`src/pages/projects/[id].astro` renders one page per project. It uses Astro's `getStaticPaths()` to enumerate every project in the collection:
 
 ```astro
 ---
@@ -375,19 +355,13 @@ const { Content } = await entry.render();
 </ProjectLayout>
 ```
 
-> **Note on `entry.render()`** — this works for Markdown content. For YAML
-> content (which is what we have), `render()` returns `{ Content }` only when
-> the file is Markdown. For YAML-only collections, `getStaticPaths` is
-> sufficient and `entry.render()` is not required. See
-> [Astro docs on Content Layer](https://docs.astro.build/en/guides/content-collections/)
-> for the current pattern.
+> **Note on `entry.render()`** — this works for Markdown content. For YAML content (which is what we have), `render()` returns `{ Content }` only when the file is Markdown. For YAML-only collections, `getStaticPaths` is sufficient and `entry.render()` is not required. See [Astro docs on Content Layer](https://docs.astro.build/en/guides/content-collections/) for the current pattern.
 
 ---
 
 ## 9. Index page with cards and filters
 
-`src/pages/index.astro` is the homepage. It loads every project, sorts them,
-and renders cards plus a small client-side filter/search.
+`src/pages/index.astro` is the homepage. It loads every project, sorts them, and renders cards plus a small client-side filter/search.
 
 ```astro
 ---
@@ -430,9 +404,7 @@ const sorted = projects
 </BaseLayout>
 ```
 
-This is intentionally **zero-framework**: plain `<script>` with no
-dependencies. The total JavaScript sent to the client for the index page is
-typically under 2 KB.
+This is intentionally **zero-framework**: plain `<script>` with no dependencies. The total JavaScript sent to the client for the index page is typically under 2 KB.
 
 ---
 
@@ -473,15 +445,13 @@ const { projects } = Astro.props;
 </BaseLayout>
 ```
 
-The same pattern is used for `/tags/[tag]`, and for technology-filtered pages
-(`/tech/[language]`).
+The same pattern is used for `/tags/[tag]`, and for technology-filtered pages (`/tech/[language]`).
 
 ---
 
 ## 11. View transitions
 
-`<ClientRouter />` (the modern successor to `<ViewTransitions />`) is
-included in the root layout to give smooth page transitions:
+`<ClientRouter />` (the modern successor to `<ViewTransitions />`) is included in the root layout to give smooth page transitions:
 
 ```astro
 ---
@@ -500,17 +470,13 @@ import { ClientRouter } from 'astro:transitions';
 </html>
 ```
 
-Note: if you later enable `experimental.csp` (added in Astro 6+),
-`<ClientRouter />` is incompatible. Use the browser-native
-`@view-transition` CSS rule instead.
+Note: if you later enable `experimental.csp` (added in Astro 6+), `<ClientRouter />` is incompatible. Use the browser-native `@view-transition` CSS rule instead.
 
 ---
 
 ## 12. Search
 
-For a portfolio of dozens of projects, the lightest search is a JSON dump of
-the project index plus a small client-side matcher. At build time, generate
-`public/search-index.json`:
+For a portfolio of dozens of projects, the lightest search is a JSON dump of the project index plus a small client-side matcher. At build time, generate `public/search-index.json`:
 
 ```js
 // scripts/build-search-index.mjs
@@ -530,16 +496,13 @@ const index = projects.map((p) => ({
 await fs.writeFile('public/search-index.json', JSON.stringify(index));
 ```
 
-The index page lazy-fetches `search-index.json` and runs a fuzzy match
-client-side. For the expected scale this is more than fast enough and avoids
-embedding an entire search library.
+The index page lazy-fetches `search-index.json` and runs a fuzzy match client-side. For the expected scale this is more than fast enough and avoids embedding an entire search library.
 
 ---
 
 ## 13. Sitemap and metadata
 
-`@astrojs/sitemap` generates `sitemap-index.xml` automatically from the
-output of `getStaticPaths`. Install:
+`@astrojs/sitemap` generates `sitemap-index.xml` automatically from the output of `getStaticPaths`. Install:
 
 ```bash
 npx astro add sitemap
@@ -556,31 +519,21 @@ export default defineConfig({
 });
 ```
 
-`<meta>` tags for each project page come from the project description and
-name, rendered in the `<head>` of `ProjectLayout.astro`.
+`<meta>` tags for each project page come from the project description and name, rendered in the `<head>` of `ProjectLayout.astro`.
 
 ---
 
 ## 14. Build performance
 
-For a portfolio growing to 50+ projects, the build should remain well under
-30 seconds on GitHub Actions runners. Key levers:
+For a portfolio growing to 50+ projects, the build should remain well under 30 seconds on GitHub Actions runners. Key levers:
 
-- **Content Collections cache** — Astro caches the parsed collection to
-  `.astro/data-store.json` between builds. With pre-cloned repos under
-  `src/data/projects/`, the cache keeps rebuilds fast when only one repo
-  changed.
-- **Shallow clones** — the discovery script uses `--depth 1 --filter=blob:none`
-  to minimise transfer.
-- **Sparse checkout** — only `project.yml` files are checked out, not full
-  source trees.
+- **Content Collections cache** — Astro caches the parsed collection to   `.astro/data-store.json` between builds. With pre-cloned repos under   `src/data/projects/`, the cache keeps rebuilds fast when only one repo   changed.
+- **Shallow clones** — the discovery script uses `--depth 1 --filter=blob:none`   to minimise transfer.
+- **Sparse checkout** — only `project.yml` files are checked out, not full   source trees.
 - **Parallel clones** — `Promise.all` in the discovery script.
-- **`experimental.collectionStorage: 'chunked'`** — keeps the data store
-  under any threshold once it grows large.
+- **`experimental.collectionStorage: 'chunked'`** — keeps the data store   under any threshold once it grows large.
 
-For very large collections, monitor Astro's
-[`experimental.incrementalBuild`](https://astro.build/blog/astro-720) flag,
-which returns a `cacheKey` from `getStaticPaths` to skip unchanged pages.
+For very large collections, monitor Astro's [`experimental.incrementalBuild`](https://astro.build/blog/astro-720) flag, which returns a `cacheKey` from `getStaticPaths` to skip unchanged pages.
 
 ---
 

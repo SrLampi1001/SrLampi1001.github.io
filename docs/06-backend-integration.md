@@ -1,18 +1,12 @@
 # 06 — Backend Integration
 
-The portfolio itself is fully static — no application server, no database on
-the portfolio side. But the **projects** it indexes frequently have backend
-components, and the portfolio may want to display view counts, comments or
-likes on top of them.
+The portfolio itself is fully static — no application server, no database on the portfolio side. But the **projects** it indexes frequently have backend components, and the portfolio may want to display view counts, comments or likes on top of them.
 
 This document covers:
 
-- when each provider is the right choice (Supabase, Cloudflare, Render,
-  Vercel, custom);
-- the patterns for letting the static portfolio talk to those backends
-  safely;
-- what belongs in `project.yml` versus what belongs in the project's own
-  deployment configuration.
+- when each provider is the right choice (Supabase, Cloudflare, Render,   Vercel, custom);
+- the patterns for letting the static portfolio talk to those backends   safely;
+- what belongs in `project.yml` versus what belongs in the project's own   deployment configuration.
 
 ---
 
@@ -26,9 +20,7 @@ This document covers:
 | Portfolio-level metadata (likes, comments, view counts) | Optional: a portfolio-owned backend (Supabase) |
 | Authentication for portfolio owners | Supabase (GitHub OAuth preferred) |
 
-The portfolio **does not own the project's runtime**. A project that already
-deploys to Render keeps deploying to Render; the portfolio just learns the
-URL from `project.yml` and links to it.
+The portfolio **does not own the project's runtime**. A project that already deploys to Render keeps deploying to Render; the portfolio just learns the URL from `project.yml` and links to it.
 
 ---
 
@@ -46,31 +38,24 @@ URL from `project.yml` and links to it.
 For the portfolio itself, the recommended split is:
 
 - **Portfolio site** → GitHub Pages (this repo).
-- **Portfolio-level data** (likes, view counts) → Supabase, **only if** the
-  features are worth the maintenance.
-- **Each project's backend** → whatever the project author picked. The
-  portfolio only consumes the URL.
+- **Portfolio-level data** (likes, view counts) → Supabase, **only if** the   features are worth the maintenance.
+- **Each project's backend** → whatever the project author picked. The   portfolio only consumes the URL.
 
 ---
 
 ## 3. GitHub Pages (this repo's home)
 
-This is the deployment target for the portfolio. See
-[04 — Deployment & GitHub Pages](./04-deployment.md) for the full setup.
-The short version:
+This is the deployment target for the portfolio. See [04 — Deployment & GitHub Pages](./04-deployment.md) for the full setup. The short version:
 
 - The portfolio is a static Astro build.
 - Deployment uses `withastro/action@v6` + `actions/deploy-pages@v5`.
-- Custom domain (optional) is configured in the Pages UI, not via a
-  committed `CNAME` file.
+- Custom domain (optional) is configured in the Pages UI, not via a   committed `CNAME` file.
 
 ---
 
 ## 4. Supabase (portfolio-level persistence)
 
-If the portfolio grows features like project view counts, likes or comments,
-Supabase is a natural fit. The architecture decision is whether to do it
-at all — these features are nice-to-have, not core.
+If the portfolio grows features like project view counts, likes or comments, Supabase is a natural fit. The architecture decision is whether to do it at all — these features are nice-to-have, not core.
 
 ### 4.1 Client
 
@@ -95,35 +80,23 @@ export const supabase = createClient(
 );
 ```
 
-The publishable key (`sb_publishable_...`) is the modern equivalent of the
-old `anon` key. It is safe to embed in client code **as long as RLS is
-correctly enforced** on every exposed table.
+The publishable key (`sb_publishable_...`) is the modern equivalent of the old `anon` key. It is safe to embed in client code **as long as RLS is correctly enforced** on every exposed table.
 
 ### 4.2 Row Level Security — non-negotiable
 
-Every table in an exposed schema must have RLS enabled, with policies
-scoped to the smallest possible role and operation. The CVE-2025-48757
-incident (and similar) happened because RLS was off on tables the publishable
-key could read.
+Every table in an exposed schema must have RLS enabled, with policies scoped to the smallest possible role and operation. The CVE-2025-48757 incident (and similar) happened because RLS was off on tables the publishable key could read.
 
 Hard rules from the current Supabase docs:
 
 1. **Enable RLS on every table in an exposed schema.**
-2. **Revoke default grants, then re-grant narrowly.** RLS filters rows; it
-   does not revoke SQL privileges.
-3. **Write a separate policy per operation.** Avoid `FOR ALL`; one bad
-   branch can silently open `INSERT` to anonymous.
+2. **Revoke default grants, then re-grant narrowly.** RLS filters rows; it    does not revoke SQL privileges.
+3. **Write a separate policy per operation.** Avoid `FOR ALL`; one bad    branch can silently open `INSERT` to anonymous.
 4. **Always name the role in `TO`.** `TO authenticated`, `TO anon`, etc.
-5. **For UPDATE, use both `USING` and `WITH CHECK`.** `USING` filters which
-   rows; `WITH CHECK` prevents changing the user/owner column.
-6. **Use `(select auth.uid())` not `auth.uid()`** — the subselect is
-   cached per statement (`initPlan`), the function call is not. Order of
-   magnitude faster.
+5. **For UPDATE, use both `USING` and `WITH CHECK`.** `USING` filters which    rows; `WITH CHECK` prevents changing the user/owner column.
+6. **Use `(select auth.uid())` not `auth.uid()`** — the subselect is    cached per statement (`initPlan`), the function call is not. Order of    magnitude faster.
 7. **Index every column that appears in a policy.**
-8. **`FORCE ROW LEVEL SECURITY`** on tables used by `SECURITY DEFINER`
-   functions.
-9. **Views don't get RLS by default.** Use `security_invoker = true` on
-   Postgres 15+ or revoke access from public roles.
+8. **`FORCE ROW LEVEL SECURITY`** on tables used by `SECURITY DEFINER`    functions.
+9. **Views don't get RLS by default.** Use `security_invoker = true` on    Postgres 15+ or revoke access from public roles.
 
 ### 4.3 Example: project likes
 
@@ -153,68 +126,47 @@ create policy "likes_delete" on public.project_likes
   using ((select auth.uid()) = user_id);
 ```
 
-The service role key (`sb_secret_...`) **never** ships in client code. It
-bypasses RLS and is only used server-side.
+The service role key (`sb_secret_...`) **never** ships in client code. It bypasses RLS and is only used server-side.
 
 ### 4.4 Auth for portfolio features
 
-For a GitHub-themed site, **GitHub OAuth** is the obvious choice. Visitors
-can comment and like with their existing GitHub identity, and you can show
-their GitHub username + avatar in the UI.
+For a GitHub-themed site, **GitHub OAuth** is the obvious choice. Visitors can comment and like with their existing GitHub identity, and you can show their GitHub username + avatar in the UI.
 
 Setup outline:
 
-1. Create a GitHub OAuth App at `https://github.com/settings/developers`.
-   Callback: `https://<ref>.supabase.co/auth/v1/callback`.
-2. Paste Client ID + Secret into Supabase → Authentication → Providers →
-   GitHub.
+1. Create a GitHub OAuth App at `https://github.com/settings/developers`.    Callback: `https://<ref>.supabase.co/auth/v1/callback`.
+2. Paste Client ID + Secret into Supabase → Authentication → Providers →    GitHub.
 3. In the browser: `supabase.auth.signInWithOAuth({ provider: 'github' })`.
 
-If the portfolio wants to let visitors **browse anonymously** (view counts,
-for example) without forcing sign-in, **anonymous sign-ins** are a good fit
-and are now stable. Pair with Cloudflare Turnstile or hCaptcha to prevent
-abuse.
+If the portfolio wants to let visitors **browse anonymously** (view counts, for example) without forcing sign-in, **anonymous sign-ins** are a good fit and are now stable. Pair with Cloudflare Turnstile or hCaptcha to prevent abuse.
 
 ### 4.5 Free-tier gotcha: the 7-day pause
 
-A Supabase free-tier project is paused after ~7 days of low database
-activity. For a portfolio that gets sporadic traffic, this means the API
-will become unreachable without warning.
+A Supabase free-tier project is paused after ~7 days of low database activity. For a portfolio that gets sporadic traffic, this means the API will become unreachable without warning.
 
 Two options:
 
-- **Heartbeat cron**: a GitHub Actions cron hits a tiny endpoint on the
-  Supabase project (e.g. a `select 1` against a heartbeat table) every 3
-  days. Cheap and reliable.
-- **Upgrade to Pro ($25/mo)**: no pauses, more storage, longer log
-  retention. Justifiable once the portfolio is mature.
+- **Heartbeat cron**: a GitHub Actions cron hits a tiny endpoint on the   Supabase project (e.g. a `select 1` against a heartbeat table) every 3   days. Cheap and reliable.
+- **Upgrade to Pro ($25/mo)**: no pauses, more storage, longer log   retention. Justifiable once the portfolio is mature.
 
 The heartbeat cron is the recommended path while the project is small.
 
 ### 4.6 Edge Functions — only when needed
 
-Supabase Edge Functions are Deno scripts running globally. For the
-portfolio they are useful for:
+Supabase Edge Functions are Deno scripts running globally. For the portfolio they are useful for:
 
-- bumping view counts atomically (avoids exposing the table to direct
-  writes);
+- bumping view counts atomically (avoids exposing the table to direct   writes);
 - rate-limiting anonymous actions by IP;
-- proxying the GitHub API server-side to bypass the lower `GITHUB_TOKEN`
-  rate limit;
+- proxying the GitHub API server-side to bypass the lower `GITHUB_TOKEN`   rate limit;
 - sending transactional email for comment notifications.
 
-For the initial system, every writable interaction can be an RPC
-(`security definer`) instead of an Edge Function. Add Edge Functions only
-when the RPC pattern is too restrictive.
+For the initial system, every writable interaction can be an RPC (`security definer`) instead of an Edge Function. Add Edge Functions only when the RPC pattern is too restrictive.
 
 ---
 
 ## 5. Cloudflare Pages / Workers
 
-Cloudflare Pages is a strong static-host alternative to GitHub Pages, with
-the bonus of built-in Workers for lightweight backends. The portfolio
-**currently uses** GitHub Pages; nothing about the architecture prevents
-moving to Pages later.
+Cloudflare Pages is a strong static-host alternative to GitHub Pages, with the bonus of built-in Workers for lightweight backends. The portfolio **currently uses** GitHub Pages; nothing about the architecture prevents moving to Pages later.
 
 Cloudflare Workers are V8 isolates, not Node.js. They are ideal for:
 
@@ -228,20 +180,15 @@ They are **not** suitable for:
 - anything that needs Node.js APIs (`fs`, etc.);
 - WebSocket-heavy applications.
 
-A FastAPI project should not be deployed to Workers; it should go to
-Render, Fly.io or Railway instead.
+A FastAPI project should not be deployed to Workers; it should go to Render, Fly.io or Railway instead.
 
 ---
 
 ## 6. Render / Fly.io / Railway — for project backends
 
-These are the right answer for backend-only projects (FastAPI, Express,
-Django, .NET, etc.) that need a long-running process. Render's free tier
-is the lowest entry cost but has cold starts after 15 minutes of idle.
-Fly.io and Railway are paid but cheap and reliable.
+These are the right answer for backend-only projects (FastAPI, Express, Django, .NET, etc.) that need a long-running process. Render's free tier is the lowest entry cost but has cold starts after 15 minutes of idle. Fly.io and Railway are paid but cheap and reliable.
 
-The portfolio's role with respect to these is just: read the URL from
-`project.yml`, link to it.
+The portfolio's role with respect to these is just: read the URL from `project.yml`, link to it.
 
 ```yaml
 deployment:
@@ -250,26 +197,21 @@ deployment:
     url: https://my-project.onrender.com
 ```
 
-The portfolio does not deploy, monitor or restart the backend. The
-project's own CI does that.
+The portfolio does not deploy, monitor or restart the backend. The project's own CI does that.
 
 ---
 
 ## 7. Vercel — for SSR frontends and serverless
 
-Vercel is the obvious choice for Next.js, SvelteKit, Astro SSR, or any
-project that wants serverless functions tightly integrated with a
-frontend. The free tier covers small projects comfortably.
+Vercel is the obvious choice for Next.js, SvelteKit, Astro SSR, or any project that wants serverless functions tightly integrated with a frontend. The free tier covers small projects comfortably.
 
-The portfolio treats a Vercel-deployed project identically to a
-Cloudflare-Pages-deployed one: read the URL, link to it.
+The portfolio treats a Vercel-deployed project identically to a Cloudflare-Pages-deployed one: read the URL, link to it.
 
 ---
 
 ## 8. Pyodide + Supabase (a fun combination)
 
-The Pyodide demo runtime can talk to Supabase via the public REST endpoint,
-using `fetch()`. A small Python script in the browser can:
+The Pyodide demo runtime can talk to Supabase via the public REST endpoint, using `fetch()`. A small Python script in the browser can:
 
 - fetch the latest 10 comments on a project;
 - run a `pandas`/`numpy` analysis on cached data;
@@ -277,28 +219,24 @@ using `fetch()`. A small Python script in the browser can:
 
 Caveats:
 
-- Pyodide + `supabase-py` is not officially tested; `httpx` works in
-  Pyodide but async APIs may need `pyodide-http` patching.
+- Pyodide + `supabase-py` is not officially tested; `httpx` works in   Pyodide but async APIs may need `pyodide-http` patching.
 - Always use the **publishable** key, never the service role.
 - RLS applies even from Pyodide; treat it as another browser client.
 
-This is more demonstrative than useful — but for a portfolio, that's the
-point.
+This is more demonstrative than useful — but for a portfolio, that's the point.
 
 ---
 
 ## 9. The "no backend" baseline
 
-If the Supabase tier or any other backend is not justified yet, the
-portfolio works perfectly without one. The only thing it loses is:
+If the Supabase tier or any other backend is not justified yet, the portfolio works perfectly without one. The only thing it loses is:
 
 - live view counts;
 - likes;
 - comments;
 - any per-visitor personalised data.
 
-These are all *additions*, not prerequisites. The core system — discovery,
-indexing, presentation, demos — is fully static.
+These are all *additions*, not prerequisites. The core system — discovery, indexing, presentation, demos — is fully static.
 
 ---
 

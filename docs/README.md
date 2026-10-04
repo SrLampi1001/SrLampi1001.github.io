@@ -1,30 +1,22 @@
 # SrLampi1001 Portfolio — Documentation
 
-This directory contains the architectural and operational documentation for the
-**SrLampi1001 Project Portfolio Platform**.
+This directory contains the architectural and operational documentation for the **SrLampi1001 Project Portfolio Platform**.
 
-The platform is a centralized, automatically maintained index of every public
-software project authored by [SrLampi1001](https://github.com/SrLampi1001).
-It is hosted at:
+The platform is a centralized, automatically maintained index of every public software project authored by [SrLampi1001](https://github.com/SrLampi1001). It is hosted at:
 
 ```
 https://SrLampi1001.github.io
 ```
 
-The portfolio is implemented with **Astro**, deployed as a fully static site
-through **GitHub Pages**, and consumes `project.yml` files from each project
-repository to render project pages, cards, categories, tags and filters.
+The portfolio is implemented with **Astro**, deployed as a fully static site through **GitHub Pages**, and consumes `project.yml` files from each project repository to render project pages, cards, categories, tags and filters.
 
-The portfolio **does not own the projects it indexes**. Each project remains
-independently built, deployed and runnable on whatever technology stack is most
-appropriate for it.
+The portfolio **does not own the projects it indexes**. Each project remains independently built, deployed and runnable on whatever technology stack is most appropriate for it.
 
 ---
 
 ## Reading order
 
-If this is your first time here, read the documents in the order below. Later
-sections assume you have read earlier ones.
+If this is your first time here, read the documents in the order below. Later sections assume you have read earlier ones.
 
 | # | Document | Purpose |
 |---|----------|---------|
@@ -49,19 +41,12 @@ sections assume you have read earlier ones.
 
 Every constraint in this documentation is in service of that principle.
 
-A React project remains a React project.
-A FastAPI service remains a FastAPI service.
-A Python CLI remains a Python program.
-A Docusaurus site remains a Docusaurus site.
+A React project remains a React project. A FastAPI service remains a FastAPI service. A Python CLI remains a Python program. A Docusaurus site remains a Docusaurus site.
 
-The portfolio provides a single, consistent way to **discover**, **understand**
-and **interact with** these projects, without forcing any of them to migrate to
-a particular framework.
+The portfolio provides a single, consistent way to **discover**, **understand** and **interact with** these projects, without forcing any of them to migrate to a particular framework.
 
 ---
 
 ## Project status
 
-This is the documentation phase of the platform. The implementation will be
-built incrementally according to the architecture described here. See
-[00 — Getting Started](./00-getting-started.md) for what you can do *today*.
+This is the documentation phase of the platform. The implementation will be built incrementally according to the architecture described here. See [00 — Getting Started](./00-getting-started.md) for what you can do *today*.

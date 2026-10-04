@@ -1,11 +1,9 @@
 # 08 — CI/CD & Automation
 
-This document describes the end-to-end pipeline that keeps the portfolio up
-to date with changes in every indexed project. It covers:
+This document describes the end-to-end pipeline that keeps the portfolio up to date with changes in every indexed project. It covers:
 
 - the four triggers that fire the portfolio rebuild;
-- the discovery workflow that fetches `project.yml` files from sibling
-  repositories;
+- the discovery workflow that fetches `project.yml` files from sibling   repositories;
 - the build, validation and deployment steps;
 - per-repo validation workflows;
 - credential management;
@@ -125,13 +123,9 @@ jobs:
 
 Notes:
 
-- The validation step **runs before** `npm install`. This means even a
-  malformed sibling `project.yml` is reported with a clean error, not
-  buried inside an Astro build failure.
-- `concurrency.cancel-in-progress: true` ensures rapid back-to-back pushes
-  don't double-build.
-- The `github-pages` environment (Settings → Environments) is required by
-  `actions/deploy-pages`. If it doesn't exist yet, create it.
+- The validation step **runs before** `npm install`. This means even a   malformed sibling `project.yml` is reported with a clean error, not   buried inside an Astro build failure.
+- `concurrency.cancel-in-progress: true` ensures rapid back-to-back pushes   don't double-build.
+- The `github-pages` environment (Settings → Environments) is required by   `actions/deploy-pages`. If it doesn't exist yet, create it.
 
 ---
 
@@ -139,17 +133,14 @@ Notes:
 
 ### 3.1 `push` to `main`
 
-The lowest-latency trigger. Runs the workflow whenever a commit lands on
-the portfolio repo's default branch. This catches:
+The lowest-latency trigger. Runs the workflow whenever a commit lands on the portfolio repo's default branch. This catches:
 
 - direct edits to the portfolio's own source (rare, but possible);
-- the cron and `repository_dispatch` workflows committing back any change
-  (e.g. updating the data cache).
+- the cron and `repository_dispatch` workflows committing back any change   (e.g. updating the data cache).
 
 ### 3.2 `repository_dispatch` from sibling repos
 
-This is the event-driven trigger. When a sibling project's CI finishes
-successfully, it sends a dispatch to the portfolio repo:
+This is the event-driven trigger. When a sibling project's CI finishes successfully, it sends a dispatch to the portfolio repo:
 
 ```yaml
 # in a sibling repo's CI workflow
@@ -167,24 +158,17 @@ successfully, it sends a dispatch to the portfolio repo:
         }
 ```
 
-The receiving workflow only needs the trigger — it doesn't read the
-payload; it re-fetches everything anyway. The payload is useful only for
-debugging.
+The receiving workflow only needs the trigger — it doesn't read the payload; it re-fetches everything anyway. The payload is useful only for debugging.
 
 #### Sending the dispatch
 
-- The sender's CI must use a PAT (or GitHub App installation token) with
-  `Contents: write` on the portfolio repo.
-- Each sibling repo stores this token as the secret
-  `PORTFOLIO_DISPATCH_PAT`.
-- The receiving workflow file **must be on the default branch** of the
-  portfolio repo for the dispatch to fire. This is a hard GitHub
-  requirement.
+- The sender's CI must use a PAT (or GitHub App installation token) with   `Contents: write` on the portfolio repo.
+- Each sibling repo stores this token as the secret   `PORTFOLIO_DISPATCH_PAT`.
+- The receiving workflow file **must be on the default branch** of the   portfolio repo for the dispatch to fire. This is a hard GitHub   requirement.
 
 #### When to use
 
-Use `repository_dispatch` whenever you want **immediate** updates after a
-sibling change. It is the lowest-latency path.
+Use `repository_dispatch` whenever you want **immediate** updates after a sibling change. It is the lowest-latency path.
 
 ### 3.3 `schedule` (cron)
 
@@ -193,9 +177,7 @@ schedule:
   - cron: '17 */6 * * *'
 ```
 
-The schedule event is **delayed** under high load — GitHub explicitly
-warns that jobs queued near the top of an hour may be dropped. The
-`17 */6` form offsets the minute to avoid the worst contention.
+The schedule event is **delayed** under high load — GitHub explicitly warns that jobs queued near the top of an hour may be dropped. The `17 */6` form offsets the minute to avoid the worst contention.
 
 The schedule is a **backstop**. It catches:
 
@@ -223,8 +205,7 @@ Triggers from the GitHub UI or via `gh workflow run portfolio-build.yml`.
 | `schedule` (cron) | up to ~3h | one max | every 6h |
 | `workflow_dispatch` | manual | highest | manual |
 
-The portfolio should run reliably with **any** one of these, but using all
-four gives the best UX with the lowest operational risk.
+The portfolio should run reliably with **any** one of these, but using all four gives the best UX with the lowest operational risk.
 
 ---
 
@@ -275,45 +256,30 @@ await Promise.all(
 console.log(`Fetched ${REPOS.length} repos into ${ROOT}`);
 ```
 
-The script is idempotent: it deletes `src/data/projects/` and recreates
-it on every run. The CI runner starts clean.
+The script is idempotent: it deletes `src/data/projects/` and recreates it on every run. The CI runner starts clean.
 
 ### 4.2 Sparse checkout
 
-`--sparse` + `sparse-checkout set 'project.yml' '*/project.yml'`
-restricts the checkout to only `project.yml` files at any depth. This
-keeps disk and time down:
+`--sparse` + `sparse-checkout set 'project.yml' '*/project.yml'` restricts the checkout to only `project.yml` files at any depth. This keeps disk and time down:
 
 - A monorepo with 50,000 files still only checks out its `project.yml`s.
 - Clones take seconds, not minutes.
-- `src/data/projects/<repo>/` is small and easy to inspect when
-  debugging.
+- `src/data/projects/<repo>/` is small and easy to inspect when   debugging.
 
 ### 4.3 API rate-limit hygiene
 
-`--filter=blob:none` plus sparse checkout avoids the GitHub Contents API
-entirely — the clones use the git protocol, not the REST API. This means
-**no rate-limit pressure** for the discovery step itself, even with 100+
-siblings.
+`--filter=blob:none` plus sparse checkout avoids the GitHub Contents API entirely — the clones use the git protocol, not the REST API. This means **no rate-limit pressure** for the discovery step itself, even with 100+ siblings.
 
-The Contents API is only needed if you decide to fetch `project.yml`
-files without cloning (e.g. for a super-shallow webhook handler). For
-the standard workflow, clone + sparse-checkout is the right choice.
+The Contents API is only needed if you decide to fetch `project.yml` files without cloning (e.g. for a super-shallow webhook handler). For the standard workflow, clone + sparse-checkout is the right choice.
 
 ### 4.4 Auto-discovery vs curated list
 
 There are two ways to populate `REPOS`:
 
-- **Hand-curated list**: simple, predictable, lets you opt out of indexing
-  a sibling without deleting its `project.yml`. Recommended for the
-  initial system.
-- **Auto-discovery** via `GET /users/SrLampi1001/repos?per_page=100`:
-  convenient at scale, but requires additional filtering to decide which
-  repos should appear (e.g. by topic, by presence of `project.yml`, by
-  inclusion in a topic or org label).
+- **Hand-curated list**: simple, predictable, lets you opt out of indexing   a sibling without deleting its `project.yml`. Recommended for the   initial system.
+- **Auto-discovery** via `GET /users/SrLampi1001/repos?per_page=100`:   convenient at scale, but requires additional filtering to decide which   repos should appear (e.g. by topic, by presence of `project.yml`, by   inclusion in a topic or org label).
 
-A pragmatic compromise: maintain the list in a `data/projects.json`
-file in the portfolio repo, with a manual "include" toggle per repo:
+A pragmatic compromise: maintain the list in a `data/projects.json` file in the portfolio repo, with a manual "include" toggle per repo:
 
 ```json
 [
@@ -322,8 +288,7 @@ file in the portfolio repo, with a manual "include" toggle per repo:
 ]
 ```
 
-This file is committed, reviewed in PRs, and serves as the explicit
-allow-list.
+This file is committed, reviewed in PRs, and serves as the explicit allow-list.
 
 ---
 
@@ -351,13 +316,11 @@ This catches:
 - malformed URLs and dates;
 - structural mistakes.
 
-See [07 — Validation & Schema](./07-validation.md) for the full schema
-and the per-repo CI workflow.
+See [07 — Validation & Schema](./07-validation.md) for the full schema and the per-repo CI workflow.
 
 ### 5.2 Cross-field validation
 
-A second pass (`scripts/cross-validate.mjs`) checks invariants that the
-JSON Schema cannot express:
+A second pass (`scripts/cross-validate.mjs`) checks invariants that the JSON Schema cannot express:
 
 - unique `id` across the entire portfolio;
 - `demo.type: python` requires `demo.entrypoint`;
@@ -403,31 +366,22 @@ if (errors.length) {
 A **fine-grained PAT** scoped to:
 
 - Resource owner: your personal account (or a designated org).
-- Repositories: only the sibling repos you want to include (or "All
-  repositories" if you want true discovery).
-- Permissions: `Contents: read` (and `Metadata: read`, which is
-  auto-granted).
+- Repositories: only the sibling repos you want to include (or "All   repositories" if you want true discovery).
+- Permissions: `Contents: read` (and `Metadata: read`, which is   auto-granted).
 
-This token is stored at **Settings → Secrets and variables → Actions** as
-`CROSS_REPO_PAT` in the portfolio repo.
+This token is stored at **Settings → Secrets and variables → Actions** as `CROSS_REPO_PAT` in the portfolio repo.
 
-Fine-grained PATs **must** have an expiration date. Set a calendar
-reminder to rotate. Rotation is a one-time secret update in the GitHub
-UI; no other configuration changes are needed.
+Fine-grained PATs **must** have an expiration date. Set a calendar reminder to rotate. Rotation is a one-time secret update in the GitHub UI; no other configuration changes are needed.
 
 ### 6.2 `PORTFOLIO_DISPATCH_PAT` (in each sibling repo)
 
-A separate PAT, stored in each sibling repo's secrets, that gives the
-sibling's CI the ability to fire `repository_dispatch` at the portfolio.
-Fine-grained, scoped to:
+A separate PAT, stored in each sibling repo's secrets, that gives the sibling's CI the ability to fire `repository_dispatch` at the portfolio. Fine-grained, scoped to:
 
 - Resource owner: your personal account.
 - Repository: `SrLampi1001/SrLampi1001.github.io`.
 - Permissions: `Contents: write`.
 
-If you do not want to set up dispatch from every sibling, the schedule
-trigger still keeps things up to date — the dispatch is just an
-optimisation for low latency.
+If you do not want to set up dispatch from every sibling, the schedule trigger still keeps things up to date — the dispatch is just an optimisation for low latency.
 
 ### 6.3 Least-privilege
 
@@ -440,52 +394,38 @@ permissions:
   id-token: write  # OIDC verification
 ```
 
-No `pull-requests: write`, no `issues: write`. Each step inherits the
-workflow-level token and may only do what the workflow declares.
+No `pull-requests: write`, no `issues: write`. Each step inherits the workflow-level token and may only do what the workflow declares.
 
 ---
 
 ## 7. Per-repo validation workflow
 
-In each sibling repo, add a workflow that validates `project.yml` against
-the schema in the portfolio. This catches errors at PR time so they never
-reach the portfolio.
+In each sibling repo, add a workflow that validates `project.yml` against the schema in the portfolio. This catches errors at PR time so they never reach the portfolio.
 
-See [07 — Validation & Schema](./07-validation.md) for the full file
-and rationale.
+See [07 — Validation & Schema](./07-validation.md) for the full file and rationale.
 
 ---
 
 ## 8. Caching and incremental builds
 
-- **Astro data store**: `.astro/data-store.json` persists parsed Content
-  Collections between builds. Incremental re-builds are faster when only
-  one or two projects changed.
-- **GitHub Actions cache**: `actions/cache@v4` for the Astro cache and
-  for ETags from any API calls. Key it by lockfile hash.
-- **`concurrency.cancel-in-progress: true`**: rapid back-to-back pushes
-  cancel in-flight builds rather than queueing. Most-recent-wins.
+- **Astro data store**: `.astro/data-store.json` persists parsed Content   Collections between builds. Incremental re-builds are faster when only   one or two projects changed.
+- **GitHub Actions cache**: `actions/cache@v4` for the Astro cache and   for ETags from any API calls. Key it by lockfile hash.
+- **`concurrency.cancel-in-progress: true`**: rapid back-to-back pushes   cancel in-flight builds rather than queueing. Most-recent-wins.
 
-For portfolios growing past ~50 projects, also enable Astro's
-`experimental.incrementalBuild` (7.2+) to skip re-rendering unchanged
-pages via `getStaticPaths() cacheKey`.
+For portfolios growing past ~50 projects, also enable Astro's `experimental.incrementalBuild` (7.2+) to skip re-rendering unchanged pages via `getStaticPaths() cacheKey`.
 
 ---
 
 ## 9. Observability
 
-Each deploy run is visible under the Actions tab. The validation step's
-output is the canonical place to look when a project file breaks.
+Each deploy run is visible under the Actions tab. The validation step's output is the canonical place to look when a project file breaks.
 
 Recommended notifications:
 
-- **GitHub's "Send notifications for failed workflows"** is enabled by
-  default in personal repos; you get an email on every failed build.
-- Optionally add a Discord/Slack webhook via a third-party Action for
-  real-time alerts.
+- **GitHub's "Send notifications for failed workflows"** is enabled by   default in personal repos; you get an email on every failed build.
+- Optionally add a Discord/Slack webhook via a third-party Action for   real-time alerts.
 
-The schedule trigger ensures that intermittent failures self-heal on the
-next cron tick.
+The schedule trigger ensures that intermittent failures self-heal on the next cron tick.
 
 ---
 

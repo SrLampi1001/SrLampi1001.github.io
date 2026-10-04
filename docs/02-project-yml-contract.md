@@ -1,14 +1,8 @@
 # 02 — The `project.yml` Contract
 
-Every indexed project must provide a `project.yml` file. This file is the
-**human-defined metadata contract** that the portfolio reads to know how to
-represent the project.
+Every indexed project must provide a `project.yml` file. This file is the **human-defined metadata contract** that the portfolio reads to know how to represent the project.
 
-The contract is deliberately small, declarative and stable. Most operational
-information (last commit, creation date, deployment URL when the project uses
-GitHub Pages, etc.) is *not* stored in the YAML — it is derived from GitHub or
-from the deployment provider at build time. The YAML only contains things that
-require human judgment.
+The contract is deliberately small, declarative and stable. Most operational information (last commit, creation date, deployment URL when the project uses GitHub Pages, etc.) is *not* stored in the YAML — it is derived from GitHub or from the deployment provider at build time. The YAML only contains things that require human judgment.
 
 ---
 
@@ -18,8 +12,7 @@ require human judgment.
 - One `project.yml` per **subproject folder** for monorepos/collections (see [09](./09-monorepos.md)).
 - The schema is the same in both cases.
 
-The portfolio assumes that any `project.yml` it finds inside an indexed
-repository represents one indexable project.
+The portfolio assumes that any `project.yml` it finds inside an indexed repository represents one indexable project.
 
 ---
 
@@ -98,8 +91,7 @@ project:
 
 ## 3. Field reference
 
-Each subsection below describes one top-level key of the contract. Required
-fields are marked **(required)**.
+Each subsection below describes one top-level key of the contract. Required fields are marked **(required)**.
 
 ### 3.1 `project.id` (required)
 
@@ -109,8 +101,7 @@ A short, URL-safe identifier. Lowercase, kebab-case, ASCII.
 id: my-project
 ```
 
-Used to build URLs like `/projects/my-project/` and to look the project up in
-the index.
+Used to build URLs like `/projects/my-project/` and to look the project up in the index.
 
 ### 3.2 `project.name` (required)
 
@@ -122,8 +113,7 @@ name: My Project
 
 ### 3.3 `project.description` (required)
 
-One or two sentences that summarise what the project does. Used as the card
-subtitle and as the `<meta name="description">` of the project page.
+One or two sentences that summarise what the project does. Used as the card subtitle and as the `<meta name="description">` of the project page.
 
 ```yaml
 description: >
@@ -143,13 +133,11 @@ fundamentals   - language-learning, algorithm practice, exercises
 collection     - monorepo of multiple subprojects
 ```
 
-If the project is genuinely hybrid, prefer `application` and use
-`components` to describe the parts (see below).
+If the project is genuinely hybrid, prefer `application` and use `components` to describe the parts (see below).
 
 ### 3.5 `project.components` (optional)
 
-A bag of flags describing which major parts the project includes. Useful when
-`type` alone is too coarse.
+A bag of flags describing which major parts the project includes. Useful when `type` alone is too coarse.
 
 ```yaml
 components:
@@ -168,8 +156,7 @@ Recognised flags (all optional, all default to `false`):
 
 ### 3.6 `project.categories` (required)
 
-A list of broad portfolio classifications. Categories are intentionally
-controlled — keep this list small. Recommended set:
+A list of broad portfolio classifications. Categories are intentionally controlled — keep this list small. Recommended set:
 
 ```text
 Frontend
@@ -193,8 +180,7 @@ categories:
 
 ### 3.7 `project.tags` (required)
 
-A list of fine-grained searchable characteristics. Tags are free-form and may
-include technology names, concepts or descriptors.
+A list of fine-grained searchable characteristics. Tags are free-form and may include technology names, concepts or descriptors.
 
 ```yaml
 tags:
@@ -221,13 +207,11 @@ experimental  - early / proof-of-concept
 
 ### 3.9 `project.created_at` (optional)
 
-ISO 8601 date (`YYYY-MM-DD`). This is the date the project *conceptually*
-started, which may differ from the repository creation date.
+ISO 8601 date (`YYYY-MM-DD`). This is the date the project *conceptually* started, which may differ from the repository creation date.
 
 If omitted, the portfolio falls back to the GitHub repository creation date.
 
-The portfolio also computes `updated_at` from GitHub's latest commit; this is
-not stored in `project.yml`.
+The portfolio also computes `updated_at` from GitHub's latest commit; this is not stored in `project.yml`.
 
 ### 3.10 `project.tech_stack` (required)
 
@@ -260,9 +244,7 @@ tech_stack:
     - GitHub Actions
 ```
 
-The portfolio renders this as technology filters. Example: "Show me all
-projects where `languages` includes `Python` and `databases` includes
-`PostgreSQL`."
+The portfolio renders this as technology filters. Example: "Show me all projects where `languages` includes `Python` and `databases` includes `PostgreSQL`."
 
 ### 3.11 `project.repository` (required)
 
@@ -283,13 +265,11 @@ Fields:
 - `name` (required): the repository name.
 - `branch` (optional): the branch to track. Defaults to `main`.
 
-The portfolio derives the canonical GitHub URL and the GitHub Pages URL (when
-applicable) from these fields — there is no need to repeat them.
+The portfolio derives the canonical GitHub URL and the GitHub Pages URL (when applicable) from these fields — there is no need to repeat them.
 
 ### 3.12 `project.deployment` (optional)
 
-Describes external deployments of the project. Both `frontend` and `backend`
-are optional.
+Describes external deployments of the project. Both `frontend` and `backend` are optional.
 
 ```yaml
 deployment:
@@ -311,15 +291,11 @@ Recognised `type` values:
 | `render` | URL required. |
 | `other` | Free-form. URL required. |
 
-If a project follows the standard GitHub Pages convention, the portfolio can
-derive the URL from `repository.owner` + `repository.name`. An explicit `url`
-is only required when the project uses another deployment location.
+If a project follows the standard GitHub Pages convention, the portfolio can derive the URL from `repository.owner` + `repository.name`. An explicit `url` is only required when the project uses another deployment location.
 
 ### 3.13 `project.demo` (optional)
 
-Describes how the portfolio should present interactive functionality. A
-project can have a deployment without having an embedded demo, and vice
-versa.
+Describes how the portfolio should present interactive functionality. A project can have a deployment without having an embedded demo, and vice versa.
 
 ```yaml
 demo:
@@ -376,8 +352,7 @@ documentation:
     path: docs/api.md
 ```
 
-Paths are relative to the project repository root. The portfolio fetches the
-content at build time and renders it inside the project page.
+Paths are relative to the project repository root. The portfolio fetches the content at build time and renders it inside the project page.
 
 ### 3.15 `project.presentation` (optional)
 
@@ -433,23 +408,20 @@ The portfolio combines these sources instead of duplicating them.
 
 ## 5. Validation
 
-Every `project.yml` is validated against a JSON Schema before it can be
-indexed. Invalid YAML never silently makes it into the portfolio.
+Every `project.yml` is validated against a JSON Schema before it can be indexed. Invalid YAML never silently makes it into the portfolio.
 
 Schema validation is enforced both:
 
 - **in the project repository's own CI** (so authors catch errors early);
 - **in the portfolio's CI** (so the portfolio never publishes broken metadata).
 
-See [07 — Validation & Schema](./07-validation.md) for the canonical JSON
-Schema, the AJV-based validator, and how the workflow is wired.
+See [07 — Validation & Schema](./07-validation.md) for the canonical JSON Schema, the AJV-based validator, and how the workflow is wired.
 
 ---
 
 ## 6. Minimal valid example
 
-A project repository may legally contain *only* a `project.yml` with the
-required fields. Everything else is optional:
+A project repository may legally contain *only* a `project.yml` with the required fields. Everything else is optional:
 
 ```yaml
 project:

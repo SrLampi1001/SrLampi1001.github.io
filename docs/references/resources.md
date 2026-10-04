@@ -1,8 +1,6 @@
 # References
 
-External documentation, libraries and tools referenced throughout the
-SrLampi1001 portfolio documentation. All links verified at the time of
-writing.
+External documentation, libraries and tools referenced throughout the SrLampi1001 portfolio documentation. All links verified at the time of writing.
 
 ---
 
@@ -123,6 +121,4 @@ writing.
 
 ---
 
-*This file is regenerated whenever a dependency or recommendation changes. If
-a link breaks or a tool is superseded, please update this document and the
-relevant upstream link.*
+*This file is regenerated whenever a dependency or recommendation changes. If a link breaks or a tool is superseded, please update this document and the relevant upstream link.*

@@ -1,15 +1,11 @@
 # 07 — Validation & Schema
 
-Every `project.yml` must validate against the contract before the portfolio
-will index it. Validation is enforced at two levels:
+Every `project.yml` must validate against the contract before the portfolio will index it. Validation is enforced at two levels:
 
-1. **In each project repository's own CI** — so authors catch errors at PR
-   time.
-2. **In the portfolio's build CI** — so a malformed file can never reach
-   the deployed site.
+1. **In each project repository's own CI** — so authors catch errors at PR    time.
+2. **In the portfolio's build CI** — so a malformed file can never reach    the deployed site.
 
-This document is the canonical reference for the schema, the tooling, and
-the workflows.
+This document is the canonical reference for the schema, the tooling, and the workflows.
 
 ---
 
@@ -19,17 +15,14 @@ Without a schema:
 
 - typos like `tehcn: [react]` silently degrade to "no tech listed";
 - invalid values like `type: potato` are accepted as if valid;
-- the portfolio has no defence against contracts drifting between
-  repositories.
+- the portfolio has no defence against contracts drifting between   repositories.
 
 With a schema:
 
-- the contract is **machine-checkable** and **human-discoverable** in any
-  editor;
+- the contract is **machine-checkable** and **human-discoverable** in any   editor;
 - the portfolio can refuse to publish until the file is fixed;
 - contributors get inline errors and autocomplete in their IDE;
-- TS types for the portfolio's Astro pages are generated from the same
-  source of truth.
+- TS types for the portfolio's Astro pages are generated from the same   source of truth.
 
 ---
 
@@ -47,17 +40,13 @@ The recommended toolchain is:
 | Editor support | **Red Hat `vscode-yaml`** | Autocompletion + hover + inline errors against the JSON Schema. |
 | Lint (style) | **`yamllint`** | Indentation, key duplication, line length. Complements — does not replace — schema validation. |
 
-JSON Schema is chosen over a Zod-first design because the portfolio needs
-to validate YAML files across **multiple language ecosystems** (Node CI,
-Python tooling, Go could be added later). JSON Schema is the lingua franca.
+JSON Schema is chosen over a Zod-first design because the portfolio needs to validate YAML files across **multiple language ecosystems** (Node CI, Python tooling, Go could be added later). JSON Schema is the lingua franca.
 
 ---
 
 ## 3. The canonical schema file
 
-The schema lives at `schema/project.schema.json` in the portfolio
-repository. It is the authoritative contract. Both the portfolio build and
-the per-repo validation workflow consume it.
+The schema lives at `schema/project.schema.json` in the portfolio repository. It is the authoritative contract. Both the portfolio build and the per-repo validation workflow consume it.
 
 ### 3.1 Structure
 
@@ -192,9 +181,7 @@ the per-repo validation workflow consume it.
 }
 ```
 
-A working copy of this file is committed to the portfolio repo at
-`schema/project.schema.json`. Every `project.yml` in every indexed repo is
-validated against it.
+A working copy of this file is committed to the portfolio repo at `schema/project.schema.json`. Every `project.yml` in every indexed repo is validated against it.
 
 ---
 
@@ -214,12 +201,10 @@ Once that is in place, the Red Hat YAML extension provides:
 
 - **Autocompletion** for every property.
 - **Hover documentation** from the JSON Schema `description`.
-- **Inline errors** for typos, missing required fields, wrong types, enum
-  violations.
+- **Inline errors** for typos, missing required fields, wrong types, enum   violations.
 - **Enum pickers** for `type`, `status`, `deployment.type`, `demo.type`.
 
-This is the single biggest UX improvement for contributors — the schema
-becomes an interactive form rather than a documentation reference.
+This is the single biggest UX improvement for contributors — the schema becomes an interactive form rather than a documentation reference.
 
 ---
 
@@ -239,8 +224,7 @@ npx ajv validate \
   --all-errors
 ```
 
-The `--all-errors` flag collects every error rather than stopping at the
-first; this is the recommended mode for portfolio work.
+The `--all-errors` flag collects every error rather than stopping at the first; this is the recommended mode for portfolio work.
 
 For multiple files (typical for monorepos):
 
@@ -258,8 +242,7 @@ npx ajv validate \
 
 ## 6. The per-repo CI workflow
 
-Every project repository should run validation in CI. The canonical
-workflow:
+Every project repository should run validation in CI. The canonical workflow:
 
 `.github/workflows/validate-project.yml` (in each project repo):
 
@@ -301,17 +284,13 @@ jobs:
             --all-errors
 ```
 
-This clones the portfolio repo **just for the schema file** (sparse
-checkout), then validates every `project.yml` in the project repo.
-Failures block merging.
+This clones the portfolio repo **just for the schema file** (sparse checkout), then validates every `project.yml` in the project repo. Failures block merging.
 
 ---
 
 ## 7. The portfolio's own validation step
 
-The portfolio's own deploy workflow should re-validate every `project.yml`
-it has fetched, before building. See [08 — CI/CD & Automation](./08-ci-cd.md)
-for the full pipeline; the validation step looks like:
+The portfolio's own deploy workflow should re-validate every `project.yml` it has fetched, before building. See [08 — CI/CD & Automation](./08-ci-cd.md) for the full pipeline; the validation step looks like:
 
 ```yaml
 - name: Validate every fetched project.yml
@@ -325,15 +304,13 @@ for the full pipeline; the validation step looks like:
       --all-errors
 ```
 
-If any file fails, the build halts. **No project is silently indexed with
-malformed metadata.**
+If any file fails, the build halts. **No project is silently indexed with malformed metadata.**
 
 ---
 
 ## 8. Generating TypeScript types
 
-Once the schema is the source of truth, the TypeScript types the Astro
-pages use should be derived from it.
+Once the schema is the source of truth, the TypeScript types the Astro pages use should be derived from it.
 
 `package.json`:
 
@@ -352,18 +329,13 @@ Install:
 npm install -D json-schema-to-typescript
 ```
 
-The generated file (`src/lib/types/project.ts`) contains a `Project` type
-that mirrors the schema, with JSDoc comments copied from each property's
-`description` and `title`. `pattern`, `format`, `minimum`, `maximum` and
-similar runtime constraints are dropped (ajv enforces them, not TypeScript).
+The generated file (`src/lib/types/project.ts`) contains a `Project` type that mirrors the schema, with JSDoc comments copied from each property's `description` and `title`. `pattern`, `format`, `minimum`, `maximum` and similar runtime constraints are dropped (ajv enforces them, not TypeScript).
 
 ---
 
 ## 9. YAML subset recommendations
 
-The contract should be portable across YAML 1.2 parsers. The schema
-validation will not catch YAML-level issues, so document this in any
-contributor guide:
+The contract should be portable across YAML 1.2 parsers. The schema validation will not catch YAML-level issues, so document this in any contributor guide:
 
 | Allowed | Discouraged | Forbidden |
 |---------|-------------|-----------|
@@ -373,9 +345,7 @@ contributor guide:
 | Quoted strings (single or double) | — | Tab characters for indentation |
 | Trailing commas are not allowed by YAML | — | `null`, `Yes`, `No`, `On`, `Off` as bare words (1.1 quirks) — quote them |
 
-Stick to the **YAML 1.2 core schema** (eemeli/yaml default). Quote booleans
-that should be strings; quote anything starting with a digit that isn't a
-number; never use tabs.
+Stick to the **YAML 1.2 core schema** (eemeli/yaml default). Quote booleans that should be strings; quote anything starting with a digit that isn't a number; never use tabs.
 
 ---
 
@@ -385,12 +355,10 @@ Some contracts need rules that span multiple fields:
 
 - `demo.type: python` requires `demo.entrypoint` to be set.
 - `demo.type: api` requires `deployment.backend` to be set.
-- `type: collection` should have at least one nested `project.yml` in the
-  repo.
+- `type: collection` should have at least one nested `project.yml` in the   repo.
 - All `id` values across the entire portfolio must be unique.
 
-These are not pure JSON Schema concerns. They are implemented as a second
-validation pass after the schema check:
+These are not pure JSON Schema concerns. They are implemented as a second validation pass after the schema check:
 
 ```ts
 // src/lib/validation.ts
@@ -427,11 +395,9 @@ A `project.yml` is **valid** when:
 2. It validates against `schema/project.schema.json` via `ajv`.
 3. It passes the cross-field validation pass.
 4. The `id` is unique across all `project.yml` files in the portfolio.
-5. All required URLs (deployment, demo) are reachable when the build runs
-   the optional liveness check.
+5. All required URLs (deployment, demo) are reachable when the build runs    the optional liveness check.
 
-If any of these fail, the portfolio's build halts. The contributor sees a
-clear error pointing at the specific file and property.
+If any of these fail, the portfolio's build halts. The contributor sees a clear error pointing at the specific file and property.
 
 ---
 

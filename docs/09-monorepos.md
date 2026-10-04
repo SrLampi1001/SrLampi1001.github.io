@@ -1,7 +1,6 @@
 # 09 — Monorepos & Collections
 
-This document describes how a single GitHub repository can expose **multiple**
-indexable projects to the portfolio through nested `project.yml` files.
+This document describes how a single GitHub repository can expose **multiple** indexable projects to the portfolio through nested `project.yml` files.
 
 ---
 
@@ -11,8 +10,7 @@ The portfolio distinguishes between two related concepts:
 
 ### 1.1 Collection
 
-A repository whose **entire purpose** is to gather multiple small projects
-under one roof. The classic example is:
+A repository whose **entire purpose** is to gather multiple small projects under one roof. The classic example is:
 
 ```text
 riwi_projects/
@@ -26,38 +24,31 @@ riwi_projects/
     └── ...
 ```
 
-The root `project.yml` represents the collection itself. Each subdirectory
-contains its own `project.yml` representing an individual project.
+The root `project.yml` represents the collection itself. Each subdirectory contains its own `project.yml` representing an individual project.
 
 ### 1.2 Monorepo
 
-A repository that contains several larger projects, typically sharing
-dependencies or tooling. Examples:
+A repository that contains several larger projects, typically sharing dependencies or tooling. Examples:
 
 - A single repo holding the frontend, backend and docs site of one product.
 - A workspace containing multiple related apps.
 
-The portfolio treats monorepo subprojects the same way it treats collection
-subprojects: by reading every `project.yml` it finds.
+The portfolio treats monorepo subprojects the same way it treats collection subprojects: by reading every `project.yml` it finds.
 
 ---
 
 ## 2. Discovery rules
 
-The discovery workflow walks every indexed repository and treats any
-`project.yml` it encounters as the metadata for **one project**. The
-following rules apply:
+The discovery workflow walks every indexed repository and treats any `project.yml` it encounters as the metadata for **one project**. The following rules apply:
 
 1. There is exactly **one `project.yml` per indexable project.**
 2. The path of the file determines the project URL:
    - `project.yml` at repo root → `/projects/<id>/`
    - `python/project.yml` → `/projects/<id>/` where `id` is unique within the portfolio
 3. All `project.yml` files in the same repo must declare **distinct** `id`s.
-4. A repo may declare a top-level `project.yml` even when it also contains
-   subprojects. The top-level project then usually has `type: collection`.
+4. A repo may declare a top-level `project.yml` even when it also contains    subprojects. The top-level project then usually has `type: collection`.
 
-The portfolio walks depth-first and indexes everything it finds. There is no
-allow-list or deny-list beyond the contract's required fields.
+The portfolio walks depth-first and indexes everything it finds. There is no allow-list or deny-list beyond the contract's required fields.
 
 ---
 
@@ -153,8 +144,7 @@ if __name__ == "__main__":
         print("Operación no soportada")
 ```
 
-This file does **not** contain a `project.yml` of its own; it is a leaf of the
-`riwi-python` collection.
+This file does **not** contain a `project.yml` of its own; it is a leaf of the `riwi-python` collection.
 
 ---
 
@@ -166,20 +156,15 @@ When the discovery workflow indexes `riwi_projects`, the portfolio generates:
 - a project page for `riwi-python` that lists the individual Python exercises;
 - a project page for `riwi-calculadora` if `calculadora.py` ever ships its own `project.yml`.
 
-In the cards view, both `Riwi Projects` (collection) and `Riwi — Python`
-(fundamentals) appear in the index. `Riwi — Python` shows a **Pyodide demo**
-that runs `calculadora.py` directly in the browser.
+In the cards view, both `Riwi Projects` (collection) and `Riwi — Python` (fundamentals) appear in the index. `Riwi — Python` shows a **Pyodide demo** that runs `calculadora.py` directly in the browser.
 
 ---
 
 ## 5. ID uniqueness across the portfolio
 
-Because every project in the portfolio shares one global namespace, the
-combination of `(repository.owner, repository.name, project.yml path, id)`
-must be unique across the whole portfolio.
+Because every project in the portfolio shares one global namespace, the combination of `(repository.owner, repository.name, project.yml path, id)` must be unique across the whole portfolio.
 
-The portfolio CI performs this check during validation; collisions fail the
-build with a clear error message pointing at both projects.
+The portfolio CI performs this check during validation; collisions fail the build with a clear error message pointing at both projects.
 
 If you want to reuse a name, prefix the `id` with the repo name, e.g.:
 
@@ -195,9 +180,7 @@ id: riwi_projects-javascript
 
 ## 6. What is not a monorepo
 
-A repo that contains exactly **one** project should not declare
-`type: collection` and should not have multiple `project.yml` files. It
-should have a single `project.yml` at the root.
+A repo that contains exactly **one** project should not declare `type: collection` and should not have multiple `project.yml` files. It should have a single `project.yml` at the root.
 
 ```text
 react-todo/
@@ -206,8 +189,7 @@ react-todo/
 └── project.yml           # ← one project
 ```
 
-This avoids forcing the portfolio to render a redundant "collection wrapper"
-around what is really a single project.
+This avoids forcing the portfolio to render a redundant "collection wrapper" around what is really a single project.
 
 ---
 
