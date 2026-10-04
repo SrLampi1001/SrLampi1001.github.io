@@ -1,23 +1,21 @@
 ---
 // Interactive Python demo using Pyodide + xterm.js.
 //
-// Pyodide 0.28's stdin handler is fully synchronous (it accepts
-// strings, Uint8Arrays, or bytes — not Promises). Returning a
-// Promise causes `OSError: I/O error` from Python's `input()`.
+// Pyodide 0.28 stdin is fully synchronous: the callback must return
+// string | Uint8Array | number | null, never a Promise (which raises
+// `OSError: I/O error`). We use a sync queue pre-populated from
+// project.demo.inputs.
 //
-// The simplest correct approach is a sync queue: stdin returns the
-// next line from the queue, or `null` for EOF. Two modes:
+// For stdout/stderr we use the `write` handler (raw bytes) instead
+// of `batched`, because `batched` strips the trailing newline from
+// each line — combined with xterm.js's default `convertEol: false`,
+// that means every "line" collapses onto one. The `write` handler
+// gives us the raw bytes including `\n`, which we then convert to
+// `\r\n` for the terminal.
 //
-//   - Pre-baked: `inputs` non-empty. The queue is pre-populated; the
-//     script runs deterministically.
-//   - Interactive: `inputs` empty. The user must type and press
-//     Enter BEFORE Python reads stdin. Limited to scripts whose first
-//     input is needed after the user can react.
-//
-// True interactive stdin (where the user can respond mid-execution
-// to `input()` calls inside a long-running script) requires running
-// Pyodide in a Web Worker so a busy-wait doesn't freeze the UI. That's
-// a follow-up step; see docs/STEP-9-FIXES.md.
+// True interactive stdin (user types in response to mid-script
+// `input()` calls) requires running Pyodide in a Web Worker so a
+// blocking stdin doesn't freeze the UI. That's a follow-up.
 
 interface Props {
   /** Repository owner (used to build raw.githubusercontent.com URL) */
@@ -83,7 +81,7 @@ const pyodideCdn = `https://cdn.jsdelivr.net/pyodide/v${pyodideVersion}/full/`;
   .demo-run:hover { background: #16a34a; }
   .demo-run:disabled { background: #4b5563; cursor: wait; color: #d1d5db; }
   .demo-body {
-    height: 480px;
+    height: 540px;
     background: #1a1a1a;
     color: #f3f4f6;
     padding: var(--space-2);
@@ -105,17 +103,14 @@ const pyodideCdn = `https://cdn.jsdelivr.net/pyodide/v${pyodideVersion}/full/`;
 <script>
   // Client-side runtime.
   //
-  // Pyodide's stdin handler is fully synchronous (per Pyodide 0.28 docs:
-  // https://pyodide.org/en/stable/usage/streams.html). Returning a
-  // Promise from stdin causes `OSError: I/O error` from Python's
-  // input() because Pyodide can't await it. We use a synchronous
-  // queue instead.
+  // Pyodide's stdin handler is fully synchronous (per Pyodide 0.28 docs):
+  // it accepts strings, Uint8Arrays, or numbers. Returning a Promise
+  // raises `OSError: I/O error`. We use a sync queue.
   //
-  // For interactive use (where the user types in response to prompts
-  // while the script runs), the user must type and press Enter
-  // BEFORE Python reaches the input() call. The visible char-by-char
-  // echo is handled separately via term.onData — that's just display,
-  // not Python's stdin.
+  // Pyodide's `batched` stdout handler strips the trailing newline
+  // from each line. Combined with xterm.js's default `convertEol: false`,
+  // this means output appears as one long line. We use the `write`
+  // handler (raw bytes) and convert `\n` to `\r\n` ourselves.
 
   declare global {
     interface Window {
@@ -167,10 +162,20 @@ const pyodideCdn = `https://cdn.jsdelivr.net/pyodide/v${pyodideVersion}/full/`;
     return state.pyodidePromise;
   }
 
+  /**
+   * Convert raw stdout/stderr bytes to terminal-friendly text:
+   * - decode UTF-8 to a string
+   * - replace `\n` with `\r\n` (terminals need both CR and LF)
+   * - return as a string xterm.js can write directly
+   */
+  function bytesToTerminalString(buf: Uint8Array): string {
+    const decoded = new TextDecoder().decode(buf);
+    return decoded.replace(/\r?\n/g, '\r\n');
+  }
+
   // Per-element state. We track the active xterm Terminal per
   // container so re-running disposes the old before creating a new
-  // one. Without this, every click on "Run" stacks another terminal
-  // inside the same container.
+  // one.
   const containerState = new WeakMap<HTMLElement, { term: any; fit: any }>();
 
   for (const el of Array.from(document.querySelectorAll<HTMLElement>('.pyodide-demo'))) {
@@ -189,18 +194,14 @@ const pyodideCdn = `https://cdn.jsdelivr.net/pyodide/v${pyodideVersion}/full/`;
 
     button.addEventListener('click', async () => {
       button.disabled = true;
-      const previousText = button.textContent ?? 'Run';
       try {
-        // Dispose any previous terminal in this container. Without
-        // this, multiple terminals appear stacked inside the same
-        // container, overflowing the box.
+        // Dispose any previous terminal in this container.
         const prev = containerState.get(body);
         if (prev) {
           try { prev.fit.dispose(); } catch {}
           try { prev.term.dispose(); } catch {}
           containerState.delete(body);
         }
-        // Also clear any leftover DOM from the disposed terminal.
         body.replaceChildren();
 
         setStatus('Loading xterm.js…');
@@ -211,8 +212,10 @@ const pyodideCdn = `https://cdn.jsdelivr.net/pyodide/v${pyodideVersion}/full/`;
           fontFamily: 'ui-monospace, "SF Mono", Menlo, monospace',
           fontSize: 13,
           cursorBlink: true,
-          convertEol: true,   // treat \n alone as a newline
           scrollback: 5000,
+          // convertEol defaults to false. We do the \n -> \r\n
+          // conversion ourselves in the write callback below so
+          // line breaks render correctly.
         });
         const fit = new FitAddon.FitAddon();
         term.loadAddon(fit);
@@ -221,22 +224,32 @@ const pyodideCdn = `https://cdn.jsdelivr.net/pyodide/v${pyodideVersion}/full/`;
         containerState.set(body, { term, fit });
 
         term.write('\x1b[36m=== Python demo ===\x1b[0m\r\n');
-        term.write(`Script: ${scriptUrl}\r\n\r\n`);
+        term.write(`Script: ${scriptUrl}\r\n`);
+        term.write(`Inputs queued: ${inputs.length}\r\n\r\n`);
 
         setStatus('Loading Pyodide runtime (~6 MB)…');
         const pyodide = await loadPyodide(pyodideVersion);
 
-        // Per Pyodide 0.28 docs, the stdin callback returns a
-        // string/Uint8Array/number/null synchronously. Returning
-        // a Promise raises `OSError: I/O error`. We use a sync queue
-        // pre-populated from project.demo.inputs.
+        // Sync stdin queue. Each call to Python's input() consumes one
+        // entry. If the queue empties, input() raises EOFError.
         const stdinQueue: string[] = [...inputs];
 
+        // Use the `write` handler (raw bytes) instead of `batched`.
+        // The batched handler strips trailing newlines, which makes
+        // every printed line collapse onto the same row in xterm.js
+        // (whose default convertEol is false). The write handler
+        // returns the raw bytes; we convert \n -> \r\n ourselves.
         pyodide.setStdout({
-          batched: (s: string) => term.write(s.replace(/\n/g, '\r\n')),
+          write: (buffer: Uint8Array) => {
+            term.write(bytesToTerminalString(buffer));
+            return buffer.length;
+          },
         });
         pyodide.setStderr({
-          batched: (s: string) => term.write('\x1b[31m' + s.replace(/\n/g, '\r\n') + '\x1b[0m'),
+          write: (buffer: Uint8Array) => {
+            term.write('\x1b[31m' + bytesToTerminalString(buffer) + '\x1b[0m');
+            return buffer.length;
+          },
         });
         pyodide.setStdin({
           stdin: () => stdinQueue.shift() ?? null,
@@ -249,21 +262,27 @@ const pyodideCdn = `https://cdn.jsdelivr.net/pyodide/v${pyodideVersion}/full/`;
         const src = await res.text();
         pyodide.FS.writeFile('/home/pyodide/run.py', src);
 
-        setStatus(inputs.length > 0 ? `Running (${stdinQueue.length} inputs queued)` : 'Running');
+        setStatus(`Running (${stdinQueue.length} inputs queued)`);
         button.textContent = 'Restart';
 
+        // Diagnostic prints so it's obvious whether the script ran.
+        // If the user sees these but not the script's output, then
+        // stdout is being captured but the script body didn't run.
+        // If they see neither, runPythonAsync itself failed.
+        const scriptFileName = scriptUrl.split('/').pop() ?? 'script.py';
         await pyodide.runPythonAsync(`
-          import sys
-          sys.argv = ['${scriptUrl.split('/').pop()}']
-          exec(open('/home/pyodide/run.py').read())
-        `);
+import sys
+sys.argv = ['${scriptFileName.replace(/'/g, "\\'")}']
+print('[debug] about to exec run.py', flush=True)
+exec(open('/home/pyodide/run.py').read())
+print('[debug] run.py returned, stdin queue remaining:', ${stdinQueue.length}, flush=True)
+`);
 
         setStatus('Done.');
         term.write('\r\n\x1b[32m[finished]\x1b[0m\r\n');
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
         setStatus(`Error: ${msg}`);
-        // Try to write the error to the visible terminal if possible.
         try {
           const cs = containerState.get(body);
           if (cs) cs.term.write(`\r\n\x1b[31m${msg}\x1b[0m\r\n`);
@@ -271,9 +290,6 @@ const pyodideCdn = `https://cdn.jsdelivr.net/pyodide/v${pyodideVersion}/full/`;
         button.textContent = 'Retry';
       } finally {
         button.disabled = false;
-        if (button.textContent !== 'Retry') {
-          button.textContent = button.textContent;  // keep "Restart"
-        }
       }
     });
   }
