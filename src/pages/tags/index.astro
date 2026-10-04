@@ -1,0 +1,36 @@
+---
+// Tags index — lists every tag and its project count.
+
+import '../../styles/global.css';
+import SiteHeader from '../../components/SiteHeader.astro';
+import { tagFacets } from '../../lib/projects';
+
+const facets = tagFacets();
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Tags — SrLampi1001 portfolio</title>
+  </head>
+  <body>
+    <SiteHeader current="tags" />
+
+    <a href="/" class="back-link">← Back to home</a>
+
+    <h1>Tags</h1>
+    <p class="desc">{facets.length} tag{facets.length === 1 ? '' : 's'} across the portfolio.</p>
+
+    <ul class="tag-cloud">
+      {facets.map((f) => (
+        <li>
+          <a href={`/tags/${f.name}/`}>{f.name}</a>
+          <span class="count">{f.count}</span>
+        </li>
+      ))}
+    </ul>
+
+  </body>
+</html>

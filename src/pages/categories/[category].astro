@@ -1,0 +1,44 @@
+---
+// Per-category page. Generates one static page per distinct category.
+
+import '../../styles/global.css';
+import SiteHeader from '../../components/SiteHeader.astro';
+import ProjectCard from '../../components/ProjectCard.astro';
+import { distinctCategories, projectsByCategory } from '../../lib/projects';
+
+export async function getStaticPaths() {
+  return distinctCategories().map((category) => ({
+    params: { category },
+    props: {
+      category,
+      projects: projectsByCategory(category),
+    },
+  }));
+}
+
+const { category, projects } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>{category} — SrLampi1001 portfolio</title>
+  </head>
+  <body>
+    <SiteHeader current="categories" />
+
+    <a href="/" class="back-link">← Back to home</a>
+
+    <h1>Category: {category}</h1>
+    <p class="desc">
+      {projects.length} project{projects.length === 1 ? '' : 's'} in this category.
+    </p>
+
+    <div class="grid">
+      {projects.map((p) => <ProjectCard project={p} />)}
+    </div>
+
+  </body>
+</html>

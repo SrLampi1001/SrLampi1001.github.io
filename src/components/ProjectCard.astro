@@ -1,0 +1,25 @@
+---
+import type { DiscoveredProject } from '../lib/projects';
+interface Props {
+  project: DiscoveredProject;
+  compact?: boolean;
+}
+const { project, compact = false } = Astro.props;
+---
+<article class={`card ${project.presentation?.featured ? 'featured' : ''}`}>
+  <h3>{project.name}</h3>
+  {!compact && <p class="desc-mini">{project.description}</p>}
+  <ul class="chips type">
+    <li>{project.type}</li>
+    {project.status && <li>{project.status}</li>}
+  </ul>
+  {!compact && project.categories && project.categories.length > 0 && (
+    <ul class="chips">
+      {project.categories.map((c) => <li>{c}</li>)}
+    </ul>
+  )}
+  {!compact && project.tech_stack?.languages && project.tech_stack.languages.length > 0 && (
+    <div class="meta">{project.tech_stack.languages.join(' · ')}</div>
+  )}
+  <a href={`/projects/${project.id}/`} class="cta">View project →</a>
+</article>

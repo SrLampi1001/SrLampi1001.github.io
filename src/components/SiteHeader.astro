@@ -1,0 +1,14 @@
+---
+interface Props {
+  current?: 'home' | 'projects' | 'categories' | 'tags';
+}
+const { current = 'home' } = Astro.props;
+---
+<header class="site-header">
+  <nav class="nav">
+    <a href="/" class={`brand ${current === 'home' ? 'active' : ''}`}>SrLampi1001</a>
+    <a href="/projects/" class={current === 'projects' ? 'active' : ''}>Projects</a>
+    <a href="/categories/" class={current === 'categories' ? 'active' : ''}>Categories</a>
+    <a href="/tags/" class={current === 'tags' ? 'active' : ''}>Tags</a>
+  </nav>
+</header>
