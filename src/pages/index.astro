@@ -14,9 +14,10 @@ import * as YAML from 'yaml';
 const SOURCE = {
   owner: 'SrLampi1001',
   name: 'riwi_projects',
-  branch: 'main', // hardcoded for now; the file says 'develop' but
-                  // GitHub's default branch is 'main'. Step 2 will
-                  // resolve which one wins.
+  // Step 2 exploration: fetching from a non-main branch whose name
+  // contains slashes. raw.githubusercontent.com accepts slashes in
+  // the branch segment as-is — no URL encoding required.
+  branch: 'project/python/workshop_2',
   path: 'project.yml',
 };
 
@@ -28,9 +29,11 @@ let project: any = null;
 let fetchError: string | null = null;
 let fetchedAt: string;
 let rawBytes: number = 0;
+let httpStatus: number | null = null;
 
 try {
   const response = await fetch(RAW_URL);
+  httpStatus = response.status;
   if (!response.ok) {
     fetchError = `HTTP ${response.status} ${response.statusText} for ${RAW_URL}`;
   } else {
@@ -196,13 +199,65 @@ fetchedAt = new Date().toISOString();
             <dt>order</dt><dd>{String(project.presentation?.order ?? '—')}</dd>
           </dl>
         </section>
+
+        {(() => {
+          // Recursively walks the project object and surfaces any keys
+          // (at any depth) that the current contract doesn't model.
+          // Used to spot contract divergences from real-world data.
+          const KNOWN_KEYS = new Set([
+            'id', 'name', 'description', 'type', 'categories', 'tags',
+            'status', 'tech_stack', 'repository', 'documentation',
+            'presentation',
+            // documented sub-keys:
+            'languages', 'frameworks', 'libraries', 'databases',
+            'infrastructure', 'tools',
+            'provider', 'owner', 'name', 'branch',
+            'readme', 'architecture', 'api', 'path',
+            'featured', 'order', 'thumbnail',
+          ]);
+          const KNOWN_TYPE_VALUES = new Set([
+            'frontend', 'backend', 'application', 'fundamentals', 'collection',
+          ]);
+          const findings: string[] = [];
+          function walk(value: any, path: string[]): void {
+            if (value === null || typeof value !== 'object') return;
+            if (Array.isArray(value)) {
+              value.forEach((v, i) => walk(v, [...path, String(i)]));
+              return;
+            }
+            for (const k of Object.keys(value)) {
+              const here = [...path, k];
+              if (!KNOWN_KEYS.has(k)) {
+                findings.push(`${here.join('.')} = ${JSON.stringify(value[k])}`);
+              } else {
+                walk(value[k], here);
+              }
+            }
+          }
+          walk(project, []);
+          // also flag unknown enum values
+          if (project.type && !KNOWN_TYPE_VALUES.has(project.type)) {
+            findings.push(`project.type = "${project.type}" (not in contract enum)`);
+          }
+          if (findings.length === 0) return null;
+          return (
+            <section>
+              <h2>Contract divergences</h2>
+              <p class="desc">
+                Keys or values present on this project that are not in the
+                current contract (<code>docs/02-project-yml-contract.md</code>).
+              </p>
+              <pre style="background:#f3f4f6;padding:0.75rem;border-radius:6px;overflow:auto;font-size:0.8em;">{findings.join('\n')}</pre>
+            </section>
+          );
+        })()}
       </>
     )}
 
     <p class="meta">
       Built at <code>{fetchedAt}</code><br />
-      Fetched <code>{rawBytes}</code> bytes from <code>{RAW_URL}</code><br />
-      Smoke test (Step 1) — see <code>docs/00-getting-started.md</code>.
+      HTTP <code>{httpStatus}</code> — fetched <code>{rawBytes}</code> bytes from <code>{RAW_URL}</code><br />
+      Smoke test (Step 2 — non-default branch) — see <code>docs/STEP-1-RESULT.md</code>.
     </p>
 
   </body>
