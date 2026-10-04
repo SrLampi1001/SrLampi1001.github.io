@@ -1,0 +1,229 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://SrLampi1001.github.io/schema/project.schema.json",
+  "title": "Portfolio Project",
+  "description": "Metadata contract for projects indexed by SrLampi1001.github.io. Step 3 schema — absorbs the five divergences surfaced by the smoke test (see docs/STEP-3-RESULT.md).",
+  "type": "object",
+  "additionalProperties": false,
+
+  "definitions": {
+    "ProjectType": {
+      "type": "string",
+      "enum": [
+        "frontend",
+        "backend",
+        "application",
+        "fundamentals",
+        "collection",
+        "script",
+        "library",
+        "experiment",
+        "tool",
+        "tutorial",
+        "docs"
+      ]
+    },
+    "Status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "maintained",
+        "archived",
+        "experimental",
+        "completed",
+        "wip"
+      ]
+    },
+    "DeploymentType": {
+      "type": "string",
+      "enum": [
+        "github-pages",
+        "cloudflare-pages",
+        "cloudflare-worker",
+        "vercel",
+        "render",
+        "other"
+      ]
+    },
+    "DemoType": {
+      "type": "string",
+      "enum": ["none", "webpage", "api", "python", "terminal", "documentation"]
+    },
+    "Id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{1,62}[a-z0-9]$",
+      "description": "URL-safe kebab-case identifier used in /projects/<id>/."
+    },
+    "Slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$",
+      "description": "Lowercase kebab-case string used for categories, tags, etc."
+    },
+    "LanguageString": {
+      "type": "string",
+      "minLength": 1,
+      "description": "A free-form technology name. Acceptable in any of the tech_stack.* slots."
+    },
+    "DocumentationFolder": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 }
+      }
+    },
+    "TechStack": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "languages":      { "type": "array", "items": { "$ref": "#/definitions/LanguageString" } },
+        "frameworks":     { "type": "array", "items": { "$ref": "#/definitions/LanguageString" } },
+        "libraries":      { "type": "array", "items": { "$ref": "#/definitions/LanguageString" } },
+        "databases":      { "type": "array", "items": { "$ref": "#/definitions/LanguageString" } },
+        "infrastructure": { "type": "array", "items": { "$ref": "#/definitions/LanguageString" } },
+        "tools":          { "type": "array", "items": { "$ref": "#/definitions/LanguageString" } }
+      }
+    },
+    "Repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "owner", "name"],
+      "properties": {
+        "provider": { "const": "github" },
+        "owner":    { "type": "string", "minLength": 1 },
+        "name":     { "type": "string", "minLength": 1, "pattern": "^[A-Za-z0-9._-]+$" },
+        "branch":   { "type": "string", "minLength": 1 }
+      }
+    },
+    "DeploymentEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": { "$ref": "#/definitions/DeploymentType" },
+        "url":  { "type": "string", "format": "uri" }
+      },
+      "anyOf": [
+        {
+          "description": "github-pages deployments derive their URL; explicit url is not allowed.",
+          "properties": { "type": { "const": "github-pages" } },
+          "not": { "required": ["url"] }
+        },
+        {
+          "description": "All other deployment types require an explicit url.",
+          "properties": { "type": { "not": { "const": "github-pages" } } },
+          "required": ["url"]
+        }
+      ]
+    },
+    "Deployment": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "frontend": { "$ref": "#/definitions/DeploymentEntry" },
+        "backend":  { "$ref": "#/definitions/DeploymentEntry" }
+      }
+    },
+    "Demo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "type"],
+      "properties": {
+        "enabled":    { "type": "boolean" },
+        "type":       { "$ref": "#/definitions/DemoType" },
+        "runtime":    { "type": "string" },
+        "entrypoint": { "type": "string" },
+        "inputs":     { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "Documentation": {
+      "type": "object",
+      "description": "Per-project documentation references. The 'folders' key is the canonical name; 'documentation-folder' is accepted as a legacy alias used by some early projects.",
+      "properties": {
+        "readme":               { "type": ["boolean", "string"] },
+        "architecture":         {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["path"],
+          "properties": { "path": { "type": "string" } }
+        },
+        "api":                  {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["path"],
+          "properties": { "path": { "type": "string" } }
+        },
+        "folders":              {
+          "type": "array",
+          "items": { "$ref": "#/definitions/DocumentationFolder" }
+        },
+        "documentation-folder": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/DocumentationFolder" },
+          "description": "Legacy alias for 'folders'. Prefer 'folders' in new projects."
+        }
+      },
+      "anyOf": [
+        { "required": ["readme"] },
+        { "required": ["architecture"] },
+        { "required": ["api"] },
+        { "required": ["folders"] },
+        { "required": ["documentation-folder"] }
+      ]
+    },
+    "Presentation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "featured":  { "type": "boolean", "default": false },
+        "order":     { "type": "integer", "default": 0 },
+        "thumbnail": { "type": "string" }
+      }
+    },
+    "Components": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "frontend": { "type": "boolean" },
+        "backend":  { "type": "boolean" },
+        "database": { "type": "boolean" },
+        "cli":      { "type": "boolean" },
+        "wasm":     { "type": "boolean" }
+      }
+    }
+  },
+
+  "required": ["id", "name", "description", "type", "categories", "tags", "tech_stack", "repository"],
+
+  "properties": {
+    "id":            { "$ref": "#/definitions/Id" },
+    "name":          { "type": "string", "minLength": 1, "maxLength": 80 },
+    "description":   { "type": "string", "minLength": 1, "maxLength": 600 },
+    "type":          { "$ref": "#/definitions/ProjectType" },
+    "components":    { "$ref": "#/definitions/Components" },
+    "categories":    {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 1,
+      "uniqueItems": true,
+      "description": "Free-form strings. Casing is not enforced; both 'Frontend' and 'frontend' are acceptable. See docs/02-project-yml-contract.md §9."
+    },
+    "tags": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/Slug" },
+      "uniqueItems": true
+    },
+    "status":        { "$ref": "#/definitions/Status" },
+    "created_at":    {
+      "type": "string",
+      "format": "date",
+      "description": "ISO 8601 date (YYYY-MM-DD). When omitted, the portfolio falls back to the GitHub repository creation date."
+    },
+    "tech_stack":    { "$ref": "#/definitions/TechStack" },
+    "repository":    { "$ref": "#/definitions/Repository" },
+    "deployment":    { "$ref": "#/definitions/Deployment" },
+    "demo":          { "$ref": "#/definitions/Demo" },
+    "documentation": { "$ref": "#/definitions/Documentation" },
+    "presentation":  { "$ref": "#/definitions/Presentation" }
+  }
+}

@@ -26,3 +26,6 @@ pnpm-debug.log*
 # generated project metadata (populated by discovery workflow, not committed)
 src/data/projects/
 src/content/projects/
+
+# scratch files used during smoke testing
+*.tmp.yml

@@ -8,10 +8,14 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "validate": "node scripts/validate-yaml.mjs",
+    "validate:file": "node scripts/validate-yaml.mjs"
   },
   "dependencies": {
     "astro": "^5.0.0",
-    "yaml": "^2.6.0"
+    "yaml": "^2.6.0",
+    "ajv": "^8.17.0",
+    "ajv-formats": "^3.0.1"
   }
 }

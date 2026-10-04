@@ -1,55 +1,131 @@
 ---
-// Step 1 — smoke test.
+// Step 3 — schema-validated multi-source smoke test.
 //
-// Fetches project.yml from a sibling repository at build time,
-// parses it, and renders every property on the page.
+// Fetches project.yml from TWO sources (collection root on main, leaf on
+// a project branch), validates both against schema/project.schema.json
+// using ajv, and renders a side-by-side comparison plus the property
+// breakdown for each.
 //
-// This file will be deleted in Step 2 once the real portfolio
-// routing replaces it.
+// CI calls `npm run validate` to gate; the page is for humans.
 
 import * as YAML from 'yaml';
+import Ajv from 'ajv';
+import addFormats from 'ajv-formats';
 
-// Configuration for the smoke test. Hardcoded for now; Step 2 will
-// introduce a proper discovery workflow + project list.
-const SOURCE = {
-  owner: 'SrLampi1001',
-  name: 'riwi_projects',
-  // Step 2 exploration: fetching from a non-main branch whose name
-  // contains slashes. raw.githubusercontent.com accepts slashes in
-  // the branch segment as-is — no URL encoding required.
-  branch: 'project/python/workshop_2',
-  path: 'project.yml',
-};
+import schema from '../../schema/project.schema.json';
 
-const RAW_URL =
-  `https://raw.githubusercontent.com/${SOURCE.owner}/${SOURCE.name}` +
-  `/${SOURCE.branch}/${SOURCE.path}`;
+const SOURCES = [
+  {
+    label: 'Collection root',
+    description: 'The root project.yml on the main branch.',
+    url: 'https://raw.githubusercontent.com/SrLampi1001/riwi_projects/main/project.yml',
+  },
+  {
+    label: 'Leaf on project/python/workshop_2',
+    description: 'A sub-project on a non-default branch (slashes in the name).',
+    url: 'https://raw.githubusercontent.com/SrLampi1001/riwi_projects/project/python/workshop_2/project.yml',
+  },
+];
 
-let project: any = null;
-let fetchError: string | null = null;
-let fetchedAt: string;
-let rawBytes: number = 0;
-let httpStatus: number | null = null;
+const ajv = new Ajv({ allErrors: true, strict: false });
+addFormats(ajv);
+const validate = ajv.compile(schema);
 
-try {
-  const response = await fetch(RAW_URL);
-  httpStatus = response.status;
-  if (!response.ok) {
-    fetchError = `HTTP ${response.status} ${response.statusText} for ${RAW_URL}`;
-  } else {
-    const text = await response.text();
-    rawBytes = text.length;
-    const doc = YAML.parse(text);
-    project = doc?.project ?? null;
-    if (!project) {
-      fetchError = `YAML parsed but had no "project:" root key.`;
-    }
-  }
-} catch (err) {
-  fetchError = err instanceof Error ? err.message : String(err);
+interface SourceResult {
+  label: string;
+  description: string;
+  url: string;
+  httpStatus: number | null;
+  bytes: number | null;
+  fetchedAt: string | null;
+  project: any | null;
+  valid: boolean;
+  errors: string[];
+  fetchError: string | null;
+  rawYaml: string | null;
 }
 
-fetchedAt = new Date().toISOString();
+async function fetchAndValidate(src: typeof SOURCES[number]): Promise<SourceResult> {
+  const fetchedAt = new Date().toISOString();
+  try {
+    const res = await fetch(src.url);
+    if (!res.ok) {
+      return {
+        label: src.label,
+        description: src.description,
+        url: src.url,
+        httpStatus: res.status,
+        bytes: null,
+        fetchedAt,
+        project: null,
+        valid: false,
+        errors: [`HTTP ${res.status} ${res.statusText}`],
+        fetchError: `HTTP ${res.status} ${res.statusText}`,
+        rawYaml: null,
+      };
+    }
+    const text = await res.text();
+    let doc: any;
+    try {
+      doc = YAML.parse(text);
+    } catch (e) {
+      return {
+        label: src.label,
+        description: src.description,
+        url: src.url,
+        httpStatus: res.status,
+        bytes: text.length,
+        fetchedAt,
+        project: null,
+        valid: false,
+        errors: [`YAML parse error: ${e instanceof Error ? e.message : String(e)}`],
+        fetchError: null,
+        rawYaml: text,
+      };
+    }
+
+    const projectObj = doc && typeof doc === 'object' && 'project' in doc ? doc.project : doc;
+    const ok = validate(projectObj);
+    const errors = (validate.errors ?? []).map((e) => {
+      const where = e.instancePath || '(root)';
+      const extra = e.params ? ` ${JSON.stringify(e.params)}` : '';
+      return `${where} ${e.message ?? 'invalid'}${extra}`;
+    });
+    return {
+      label: src.label,
+      description: src.description,
+      url: src.url,
+      httpStatus: res.status,
+      bytes: text.length,
+      fetchedAt,
+      project: projectObj,
+      valid: ok,
+      errors,
+      fetchError: null,
+      rawYaml: text,
+    };
+  } catch (e) {
+    return {
+      label: src.label,
+      description: src.description,
+      url: src.url,
+      httpStatus: null,
+      bytes: null,
+      fetchedAt,
+      project: null,
+      valid: false,
+      errors: [e instanceof Error ? e.message : String(e)],
+      fetchError: e instanceof Error ? e.message : String(e),
+      rawYaml: null,
+    };
+  }
+}
+
+const results = await Promise.all(SOURCES.map(fetchAndValidate));
+
+// Surface any source whose validation failed loudly in the page metadata.
+const allValid = results.every((r) => r.valid);
+const anyFetched = results.some((r) => r.project !== null);
 ---
 
 <!doctype html>
@@ -58,7 +134,7 @@ fetchedAt = new Date().toISOString();
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
     <title>
-      {project?.name ? `${project.name} — smoke test` : 'Smoke test'}
+      {allValid ? '✅ ' : '❌ '}project.yml smoke test — Step 3
     </title>
     <style>
       :root {
@@ -67,197 +143,201 @@ fetchedAt = new Date().toISOString();
         --bg: #fafafa;
         --border: #e5e5e5;
         --accent: #2563eb;
-        --error-bg: #fef2f2;
-        --error-fg: #991b1b;
+        --ok-bg: #ecfdf5; --ok-fg: #065f46; --ok-bd: #a7f3d0;
+        --err-bg: #fef2f2; --err-fg: #991b1b; --err-bd: #fecaca;
       }
       body {
         font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
-        color: var(--fg);
-        background: var(--bg);
-        max-width: 720px;
-        margin: 2rem auto;
-        padding: 0 1rem;
-        line-height: 1.5;
+        color: var(--fg); background: var(--bg);
+        max-width: 900px; margin: 2rem auto; padding: 0 1rem; line-height: 1.5;
       }
       h1 { margin-bottom: 0.25rem; }
+      h2 { font-size: 1.1rem; margin: 2rem 0 0.5rem; padding-top: 1rem; border-top: 1px solid var(--border); }
       .desc { color: var(--muted); margin-top: 0; }
-      dl { display: grid; grid-template-columns: 8rem 1fr; gap: 0.5rem 1rem; }
+      dl { display: grid; grid-template-columns: 8rem 1fr; gap: 0.5rem 1rem; margin: 0.5rem 0; }
       dt { color: var(--muted); }
-      dd { margin: 0; font-family: ui-monospace, monospace; font-size: 0.95em; }
-      ul { margin: 0; padding-left: 1.25rem; }
-      .chips { display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0; list-style: none; }
+      dd { margin: 0; font-family: ui-monospace, monospace; font-size: 0.95em; word-break: break-word; }
+      .chips { display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0; list-style: none; margin: 0.5rem 0; }
       .chips li { background: #eef2ff; color: #3730a3; padding: 0.15rem 0.6rem; border-radius: 9999px; font-size: 0.85em; }
-      section { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border); }
-      section h2 { font-size: 1.1rem; margin-bottom: 0.5rem; }
-      .meta { color: var(--muted); font-size: 0.85em; margin-top: 2rem; padding-top: 1rem; border-top: 1px dashed var(--border); }
-      .meta code { background: #e5e5e5; padding: 0.1rem 0.3rem; border-radius: 3px; }
-      .error { background: var(--error-bg); color: var(--error-fg); padding: 1rem; border-radius: 6px; }
+      table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+      th, td { text-align: left; padding: 0.5rem 0.6rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+      th { color: var(--muted); font-weight: 600; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.04em; }
+      td.url { font-family: ui-monospace, monospace; font-size: 0.85em; word-break: break-all; }
+      td.valid { font-weight: 600; }
+      td.valid.ok  { color: var(--ok-fg); }
+      td.valid.err { color: var(--err-fg); }
+      td.errors { font-family: ui-monospace, monospace; font-size: 0.8em; color: var(--err-fg); white-space: pre-wrap; }
+      .summary { padding: 1rem; border-radius: 6px; margin: 1rem 0; border: 1px solid; }
+      .summary.ok  { background: var(--ok-bg);  color: var(--ok-fg);  border-color: var(--ok-bd); }
+      .summary.err { background: var(--err-bg); color: var(--err-fg); border-color: var(--err-bd); }
+      pre { background: #f3f4f6; padding: 0.75rem; border-radius: 6px; overflow: auto; font-size: 0.8em; }
+      details { margin: 0.5rem 0; }
+      summary { cursor: pointer; color: var(--muted); }
     </style>
   </head>
   <body>
 
-    {fetchError ? (
-      <div class="error">
-        <strong>Failed to load project.yml.</strong>
-        <p>{fetchError}</p>
-      </div>
-    ) : (
-      <>
-        <h1>{project.name}</h1>
-        <p class="desc">{project.description}</p>
+    <h1>project.yml smoke test — Step 3</h1>
+    <p class="desc">
+      Schema-validated fetch + render. Two sources (one default branch, one
+      non-default branch) are validated against
+      <code>schema/project.schema.json</code>. The build will eventually
+      fail CI on validation errors; for now the page shows the result
+      inline so a human can read it.
+    </p>
 
-        <section>
-          <h2>Identity</h2>
-          <dl>
-            <dt>id</dt><dd>{project.id}</dd>
-            <dt>type</dt><dd>{project.type}</dd>
-            <dt>status</dt><dd>{project.status ?? '— (not declared)'}</dd>
-          </dl>
-        </section>
+    <div class={`summary ${allValid ? 'ok' : 'err'}`}>
+      <strong>{allValid ? 'All sources valid' : 'Validation failed'}</strong> —
+      {results.filter((r) => r.valid).length}/{results.length} passed.
+    </div>
 
-        <section>
-          <h2>Categories</h2>
-          {project.categories?.length ? (
-            <ul class="chips">
-              {project.categories.map((c: string) => <li>{c}</li>)}
-            </ul>
-          ) : <p><em>none</em></p>}
-        </section>
+    <h2>Validation results</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Source</th>
+          <th>HTTP</th>
+          <th>Bytes</th>
+          <th>Valid?</th>
+          <th>Errors</th>
+        </tr>
+      </thead>
+      <tbody>
+        {results.map((r) => (
+          <tr>
+            <td>
+              <strong>{r.label}</strong><br />
+              <span class="desc">{r.description}</span><br />
+              <span class="url">{r.url}</span>
+            </td>
+            <td>{r.httpStatus ?? '—'}</td>
+            <td>{r.bytes ?? '—'}</td>
+            <td class={`valid ${r.valid ? 'ok' : 'err'}`}>{r.valid ? '✅' : '❌'}</td>
+            <td class="errors">{r.errors.length === 0 ? '—' : r.errors.join('\n')}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
 
-        <section>
-          <h2>Tags</h2>
-          {project.tags?.length ? (
-            <ul class="chips">
-              {project.tags.map((t: string) => <li>{t}</li>)}
-            </ul>
-          ) : <p><em>none</em></p>}
-        </section>
+    {results.map((r) => (
+      <section>
+        <h2>{r.label} {r.valid ? '✅' : '❌'}</h2>
+        {!r.project ? (
+          <p class="desc">No project data (fetch or parse failed).</p>
+        ) : (
+          <>
+            <p><strong>{r.project.name}</strong> — {r.project.description}</p>
 
-        <section>
-          <h2>Repository</h2>
-          <dl>
-            <dt>provider</dt><dd>{project.repository?.provider ?? '—'}</dd>
-            <dt>owner</dt><dd>{project.repository?.owner ?? '—'}</dd>
-            <dt>name</dt><dd>{project.repository?.name ?? '—'}</dd>
-            <dt>branch</dt><dd>{project.repository?.branch ?? '—'}</dd>
-          </dl>
-        </section>
+            <h3 style="font-size:0.95rem;margin:0.75rem 0 0.25rem;">Identity</h3>
+            <dl>
+              <dt>id</dt><dd>{r.project.id}</dd>
+              <dt>type</dt><dd>{r.project.type}</dd>
+              <dt>status</dt><dd>{r.project.status ?? <em>(not set — defaults to "maintained")</em>}</dd>
+            </dl>
 
-        <section>
-          <h2>Tech stack</h2>
-          <dl>
-            <dt>languages</dt>
-            <dd>
-              {project.tech_stack?.languages?.length
-                ? <ul>{project.tech_stack.languages.map((l: string) => <li>{l}</li>)}</ul>
-                : '—'}
-            </dd>
-            <dt>frameworks</dt>
-            <dd>
-              {project.tech_stack?.frameworks?.length
-                ? <ul>{project.tech_stack.frameworks.map((l: string) => <li>{l}</li>)}</ul>
-                : '—'}
-            </dd>
-            <dt>libraries</dt>
-            <dd>
-              {project.tech_stack?.libraries?.length
-                ? <ul>{project.tech_stack.libraries.map((l: string) => <li>{l}</li>)}</ul>
-                : '—'}
-            </dd>
-            <dt>databases</dt>
-            <dd>
-              {project.tech_stack?.databases?.length
-                ? <ul>{project.tech_stack.databases.map((l: string) => <li>{l}</li>)}</ul>
-                : '—'}
-            </dd>
-            <dt>infrastructure</dt>
-            <dd>
-              {project.tech_stack?.infrastructure?.length
-                ? <ul>{project.tech_stack.infrastructure.map((l: string) => <li>{l}</li>)}</ul>
-                : '—'}
-            </dd>
-            <dt>tools</dt>
-            <dd>
-              {project.tech_stack?.tools?.length
-                ? <ul>{project.tech_stack.tools.map((l: string) => <li>{l}</li>)}</ul>
-                : '—'}
-            </dd>
-          </dl>
-        </section>
+            {r.project.categories?.length > 0 && (
+              <>
+                <h3 style="font-size:0.95rem;margin:0.75rem 0 0.25rem;">Categories</h3>
+                <ul class="chips">{r.project.categories.map((c: string) => <li>{c}</li>)}</ul>
+              </>
+            )}
 
-        <section>
-          <h2>Documentation</h2>
-          <dl>
-            <dt>readme</dt><dd>{String(project.documentation?.readme ?? '—')}</dd>
-          </dl>
-        </section>
+            {r.project.tags?.length > 0 && (
+              <>
+                <h3 style="font-size:0.95rem;margin:0.75rem 0 0.25rem;">Tags</h3>
+                <ul class="chips">{r.project.tags.map((t: string) => <li>{t}</li>)}</ul>
+              </>
+            )}
 
-        <section>
-          <h2>Presentation</h2>
-          <dl>
-            <dt>featured</dt><dd>{String(project.presentation?.featured ?? '—')}</dd>
-            <dt>order</dt><dd>{String(project.presentation?.order ?? '—')}</dd>
-          </dl>
-        </section>
+            <h3 style="font-size:0.95rem;margin:0.75rem 0 0.25rem;">Repository</h3>
+            <dl>
+              <dt>provider</dt><dd>{r.project.repository?.provider ?? '—'}</dd>
+              <dt>owner</dt><dd>{r.project.repository?.owner ?? '—'}</dd>
+              <dt>name</dt><dd>{r.project.repository?.name ?? '—'}</dd>
+              <dt>branch</dt><dd>{r.project.repository?.branch ?? '—'}</dd>
+            </dl>
 
-        {(() => {
-          // Recursively walks the project object and surfaces any keys
-          // (at any depth) that the current contract doesn't model.
-          // Used to spot contract divergences from real-world data.
-          const KNOWN_KEYS = new Set([
-            'id', 'name', 'description', 'type', 'categories', 'tags',
-            'status', 'tech_stack', 'repository', 'documentation',
-            'presentation',
-            // documented sub-keys:
-            'languages', 'frameworks', 'libraries', 'databases',
-            'infrastructure', 'tools',
-            'provider', 'owner', 'name', 'branch',
-            'readme', 'architecture', 'api', 'path',
-            'featured', 'order', 'thumbnail',
-          ]);
-          const KNOWN_TYPE_VALUES = new Set([
-            'frontend', 'backend', 'application', 'fundamentals', 'collection',
-          ]);
-          const findings: string[] = [];
-          function walk(value: any, path: string[]): void {
-            if (value === null || typeof value !== 'object') return;
-            if (Array.isArray(value)) {
-              value.forEach((v, i) => walk(v, [...path, String(i)]));
-              return;
-            }
-            for (const k of Object.keys(value)) {
-              const here = [...path, k];
-              if (!KNOWN_KEYS.has(k)) {
-                findings.push(`${here.join('.')} = ${JSON.stringify(value[k])}`);
-              } else {
-                walk(value[k], here);
+            {(() => {
+              const ts = r.project.tech_stack ?? {};
+              const lines: string[] = [];
+              for (const k of ['languages', 'frameworks', 'libraries', 'databases', 'infrastructure', 'tools']) {
+                if (ts[k]?.length) lines.push(`${k}: ${ts[k].join(', ')}`);
               }
-            }
-          }
-          walk(project, []);
-          // also flag unknown enum values
-          if (project.type && !KNOWN_TYPE_VALUES.has(project.type)) {
-            findings.push(`project.type = "${project.type}" (not in contract enum)`);
-          }
-          if (findings.length === 0) return null;
-          return (
-            <section>
-              <h2>Contract divergences</h2>
-              <p class="desc">
-                Keys or values present on this project that are not in the
-                current contract (<code>docs/02-project-yml-contract.md</code>).
-              </p>
-              <pre style="background:#f3f4f6;padding:0.75rem;border-radius:6px;overflow:auto;font-size:0.8em;">{findings.join('\n')}</pre>
-            </section>
-          );
-        })()}
-      </>
-    )}
+              if (lines.length === 0) return null;
+              return (
+                <>
+                  <h3 style="font-size:0.95rem;margin:0.75rem 0 0.25rem;">Tech stack</h3>
+                  <ul>{lines.map((l) => <li>{l}</li>)}</ul>
+                </>
+              );
+            })()}
 
-    <p class="meta">
-      Built at <code>{fetchedAt}</code><br />
-      HTTP <code>{httpStatus}</code> — fetched <code>{rawBytes}</code> bytes from <code>{RAW_URL}</code><br />
-      Smoke test (Step 2 — non-default branch) — see <code>docs/STEP-1-RESULT.md</code>.
+            {r.project.documentation && (
+              <>
+                <h3 style="font-size:0.95rem;margin:0.75rem 0 0.25rem;">Documentation</h3>
+                <pre>{JSON.stringify(r.project.documentation, null, 2)}</pre>
+              </>
+            )}
+
+            {r.project.presentation && (
+              <>
+                <h3 style="font-size:0.95rem;margin:0.75rem 0 0.25rem;">Presentation</h3>
+                <pre>{JSON.stringify(r.project.presentation, null, 2)}</pre>
+              </>
+            )}
+
+            <details>
+              <summary>Raw YAML ({r.bytes} bytes)</summary>
+              <pre>{r.rawYaml}</pre>
+            </details>
+          </>
+        )}
+      </section>
+    ))}
+
+    <h2>Contract decisions (Step 3)</h2>
+    <ol>
+      <li>
+        <strong>Branch mismatch (Steps 1→3):</strong> the YAML's
+        <code>repository.branch</code> is treated as a hint. When set, the
+        portfolio fetches from it; otherwise it falls back to GitHub's
+        default branch. The schema requires <code>branch</code> only on
+        the deployed-fetch path; the YAML is allowed to be absent in
+        projects that always live on the default branch.
+      </li>
+      <li>
+        <strong>Categories casing (Step 1):</strong> categories are
+        free-form strings. The schema accepts any non-empty string; the
+        docs use "Frontend" in examples but lowercase is equally valid.
+      </li>
+      <li>
+        <strong><code>tools</code> slot (Step 1):</strong> intentionally
+        permissive — accepts any meaningful term, e.g. <code>git</code>,
+        <code>subtrees</code>, <code>submodules</code>.
+      </li>
+      <li>
+        <strong><code>type</code> enum (Step 2→3):</strong> extended from
+        5 to 11 values: <code>script</code>, <code>library</code>,
+        <code>experiment</code>, <code>tool</code>, <code>tutorial</code>,
+        <code>docs</code> added.
+      </li>
+      <li>
+        <strong><code>documentation.folders</code> (Step 2→3):</strong>
+        added as canonical. The existing
+        <code>documentation.documentation-folder</code> form is accepted
+        as a legacy alias.
+      </li>
+      <li>
+        <strong><code>status</code> (new in Step 3):</strong> removed from
+        the required list (real data omits it). Enum extended to include
+        <code>completed</code> and <code>wip</code>. Default when absent:
+        <code>maintained</code>.
+      </li>
+    </ol>
+
+    <p class="desc" style="margin-top:2rem;">
+      <code>npm run validate</code> runs the same validator against the
+      same two sources. CI will use it to gate.
     </p>
 
   </body>
