@@ -7,6 +7,7 @@ import SiteHeader from '../../components/SiteHeader.astro';
 import ProjectHero from '../../components/ProjectHero.astro';
 import ProjectSidebar from '../../components/ProjectSidebar.astro';
 import ProjectCard from '../../components/ProjectCard.astro';
+import PyodideTerminal from '../../components/PyodideTerminal.astro';
 import { allProjects, relatedProjects } from '../../lib/projects';
 
 export async function getStaticPaths() {
@@ -94,17 +95,26 @@ const hasDocs = !!project.documentation;
         {hasDemo && (
           <>
             <h2 id="demo">Demo</h2>
-            <div class="hero" style="background: var(--bg); border-style: dashed;">
-              <p style="margin: 0;">
-                <strong>Demo type:</strong> <code>{project.demo!.type}</code>
-                {project.demo!.runtime && <> · runtime: <code>{project.demo!.runtime}</code></>}
-                {project.demo!.entrypoint && <> · entrypoint: <code>{project.demo!.entrypoint}</code></>}
-              </p>
-              <p class="desc" style="margin-top: var(--space-3);">
-                Interactive demo integration lands in step 8. For now, this section
-                records the demo configuration from <code>project.yml</code>.
-              </p>
-            </div>
+            {project.demo!.type === 'python' && project.demo!.entrypoint ? (
+              <PyodideTerminal
+                owner={project.repository.owner}
+                repo={project.repository.name}
+                branch={project._meta?.branch ?? project.repository.branch ?? 'main'}
+                entrypoint={project.demo!.entrypoint}
+                inputs={project.demo!.inputs}
+              />
+            ) : (
+              <div class="hero" style="background: var(--bg); border-style: dashed;">
+                <p style="margin: 0;">
+                  <strong>Demo type:</strong> <code>{project.demo!.type}</code>
+                  {project.demo!.runtime && <> · runtime: <code>{project.demo!.runtime}</code></>}
+                  {project.demo!.entrypoint && <> · entrypoint: <code>{project.demo!.entrypoint}</code></>}
+                </p>
+                <p class="desc" style="margin-top: var(--space-3);">
+                  Interactive demo integration for this type is planned but not yet implemented.
+                </p>
+              </div>
+            )}
           </>
         )}
 

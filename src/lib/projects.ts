@@ -1,13 +1,26 @@
 // Data access for the discovered project portfolio.
 //
-// All Astro pages import from here so the same queries are reused.
-// The shape of Project mirrors the schema fields we currently render;
-// step 7 will replace this with generated types from
-// json-schema-to-typescript.
+// The Project shape comes from the JSON Schema (auto-generated into
+// src/lib/types/project.ts). The discoverer adds a _meta block at
+// runtime that this module exposes via the DiscoveredProject type.
 
-import projects from '../data/projects.json';
-import errors from '../data/errors.json';
+import projectsJson from '../data/projects.json';
+import errorsJson from '../data/errors.json';
+import type {
+  PortfolioProject,
+  Status,
+  ProjectType,
+  DeploymentEntry,
+} from './types/project';
 
+// Re-export so pages can import from a single module.
+export type { PortfolioProject, Status, ProjectType, DeploymentEntry };
+
+/**
+ * Runtime metadata added by scripts/discover-projects.mjs after
+ * validation. Not in the schema because it's derived (it's the
+ * provenance of where this entry came from).
+ */
 export interface ProjectMeta {
   repo: string;
   path: string;
@@ -17,45 +30,10 @@ export interface ProjectMeta {
   parent_path: string | null;
 }
 
-export interface DeploymentEntry {
-  type: string;
-  url?: string;
-  active?: boolean;
-}
-
-export interface Project {
-  id: string;
-  name: string;
-  description: string;
-  type: string;
-  categories?: string[];
-  tags?: string[];
-  status?: string;
-  tech_stack?: Record<string, string[]>;
-  repository: {
-    provider: string;
-    owner: string;
-    name: string;
-    branch?: string;
-  };
-  documentation?: any;
-  presentation?: {
-    featured?: boolean;
-    order?: number;
-    thumbnail?: string;
-  };
-  components?: Record<string, boolean>;
-  deployment?: Record<string, DeploymentEntry>;
-  demo?: {
-    enabled: boolean;
-    type: string;
-    runtime?: string;
-    entrypoint?: string;
-    inputs?: string[];
-  };
-  created_at?: string;
-  _meta?: ProjectMeta;
-}
+/** A project as known at runtime: schema fields + discoverer metadata. */
+export type DiscoveredProject = PortfolioProject & {
+  _meta: ProjectMeta;
+};
 
 export interface DiscoveryError {
   repo: string;
@@ -65,18 +43,18 @@ export interface DiscoveryError {
   detail?: string | string[];
 }
 
-export const allProjects: Project[] = (projects as Project[]) ?? [];
-export const allErrors: DiscoveryError[] = (errors as DiscoveryError[]) ?? [];
+export const allProjects: DiscoveredProject[] = (projectsJson as DiscoveredProject[]) ?? [];
+export const allErrors: DiscoveryError[] = (errorsJson as DiscoveryError[]) ?? [];
 
-export function findProjectById(id: string): Project | undefined {
+export function findProjectById(id: string): DiscoveredProject | undefined {
   return allProjects.find((p) => p.id === id);
 }
 
-export function projectsByCategory(category: string): Project[] {
+export function projectsByCategory(category: string): DiscoveredProject[] {
   return allProjects.filter((p) => p.categories?.includes(category));
 }
 
-export function projectsByTag(tag: string): Project[] {
+export function projectsByTag(tag: string): DiscoveredProject[] {
   return allProjects.filter((p) => p.tags?.includes(tag));
 }
 
@@ -88,12 +66,12 @@ export function distinctTags(): string[] {
   return Array.from(new Set(allProjects.flatMap((p) => p.tags ?? []))).sort();
 }
 
-export interface CategoryFacet {
+export interface Facet {
   name: string;
   count: number;
 }
 
-export function categoryFacets(): CategoryFacet[] {
+export function categoryFacets(): Facet[] {
   const counts = new Map<string, number>();
   for (const p of allProjects) {
     for (const c of p.categories ?? []) {
@@ -105,7 +83,7 @@ export function categoryFacets(): CategoryFacet[] {
     .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
 }
 
-export function tagFacets(): CategoryFacet[] {
+export function tagFacets(): Facet[] {
   const counts = new Map<string, number>();
   for (const p of allProjects) {
     for (const t of p.tags ?? []) {
@@ -121,7 +99,7 @@ export function tagFacets(): CategoryFacet[] {
  * Find projects related to the given one by shared categories and tags.
  * Categories count double, tags single. Returns the top N (default 3).
  */
-export function relatedProjects(project: Project, limit = 3): Project[] {
+export function relatedProjects(project: DiscoveredProject, limit = 3): DiscoveredProject[] {
   const others = allProjects.filter((p) => p.id !== project.id);
   const projectCategories = new Set(project.categories ?? []);
   const projectTags = new Set(project.tags ?? []);
@@ -142,13 +120,13 @@ export function relatedProjects(project: Project, limit = 3): Project[] {
  * Group all projects by their parent collection (path-prefix match).
  * Returns an array of { collection, children } suitable for rendering.
  */
-export function projectsByCollection(): { collection: Project; children: Project[] }[] {
+export function projectsByCollection(): { collection: DiscoveredProject; children: DiscoveredProject[] }[] {
   const collections = allProjects
     .filter((p) => p.type === 'collection')
     .sort((a, b) => (a._meta?.parent_path ?? '').localeCompare(b._meta?.parent_path ?? ''));
 
   return collections
-    .filter((c) => c._meta?.parent_path !== null) // skip the root
+    .filter((c) => c._meta?.parent_path !== null)
     .map((c) => {
       const dir = c._meta?.parent_path ?? '';
       const children = allProjects.filter((p) => {
@@ -160,6 +138,6 @@ export function projectsByCollection(): { collection: Project; children: Project
     });
 }
 
-export function findRootCollection(): Project | undefined {
+export function findRootCollection(): DiscoveredProject | undefined {
   return allProjects.find((p) => p._meta?.parent_path === null);
 }

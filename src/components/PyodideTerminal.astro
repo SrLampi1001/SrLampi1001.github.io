@@ -1,0 +1,286 @@
+---
+// Interactive Python demo using Pyodide + xterm.js.
+//
+// Lazy-loads both libraries on first click (the Pyodide runtime is
+// ~6 MB compressed; we don't ship it on every page load).
+//
+// Modes:
+//   - If `inputs` is provided, they're fed to Python's input() in order
+//     (deterministic replay).
+//   - If `inputs` is empty, the terminal becomes interactive: xterm.js
+//     captures keystrokes and feeds them to input() when the user
+//     presses Enter. See docs/05-demo-system.md §7.2.
+
+interface Props {
+  /** Repository owner (used to build raw.githubusercontent.com URL) */
+  owner: string;
+  /** Repository name */
+  repo: string;
+  /** Branch where the script lives */
+  branch?: string;
+  /** Path to the Python script inside the repo */
+  entrypoint: string;
+  /** Optional pre-baked inputs (string array). Empty = interactive. */
+  inputs?: string[];
+  /** Display label (defaults to the entrypoint) */
+  label?: string;
+}
+
+const { owner, repo, branch = 'main', entrypoint, inputs = [], label = entrypoint } = Astro.props;
+const scriptUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${encodeURIComponent(branch)}/${entrypoint}`;
+const pyodideVersion = '0.28.3';
+const pyodideCdn = `https://cdn.jsdelivr.net/pyodide/v${pyodideVersion}/full/`;
+---
+
+<div
+  class="pyodide-demo"
+  data-script-url={scriptUrl}
+  data-inputs={JSON.stringify(inputs)}
+  data-pyodide-cdn={pyodideCdn}
+  data-pyodide-version={pyodideVersion}
+>
+  <div class="demo-header">
+    <span class="demo-title">{label}</span>
+    <button class="demo-run" type="button">Run</button>
+  </div>
+  <div class="demo-body" data-terminal></div>
+  <div class="demo-footer">
+    <span class="demo-status" data-status>Idle</span>
+    <span>· Powered by <a href="https://pyodide.org/" target="_blank" rel="noopener">Pyodide {pyodideVersion}</a> · <a href={scriptUrl} target="_blank" rel="noopener">view source</a></span>
+  </div>
+</div>
+
+<style>
+  .pyodide-demo {
+    background: #1a1a1a;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    margin: var(--space-3) 0;
+    overflow: hidden;
+  }
+  .demo-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: var(--space-2) var(--space-3);
+    background: rgba(255, 255, 255, 0.05);
+    color: #f3f4f6;
+    font-family: ui-monospace, monospace;
+    font-size: var(--text-sm);
+  }
+  .demo-title { opacity: 0.85; }
+  .demo-run {
+    background: #22c55e; color: #052e16; border: none;
+    padding: var(--space-1) var(--space-3); border-radius: var(--radius-sm);
+    font-weight: 600; cursor: pointer; font-size: var(--text-sm);
+  }
+  .demo-run:hover { background: #16a34a; }
+  .demo-run:disabled { background: #4b5563; cursor: wait; color: #d1d5db; }
+  .demo-body {
+    height: 360px;
+    background: #1a1a1a;
+    color: #f3f4f6;
+    padding: var(--space-2);
+  }
+  .demo-body :global(.xterm) { height: 100%; }
+  .demo-body :global(.xterm-viewport) { background-color: transparent !important; }
+  .demo-footer {
+    padding: var(--space-1) var(--space-3);
+    background: rgba(255, 255, 255, 0.03);
+    color: #d1d5db;
+    font-size: var(--text-xs);
+    display: flex; gap: var(--space-2); flex-wrap: wrap;
+  }
+  .demo-footer a { color: #93c5fd; }
+  .demo-status { font-style: italic; opacity: 0.85; }
+</style>
+
+<script>
+  // Client-side runtime. Lazy-loads Pyodide and xterm.js on first click.
+  declare global {
+    interface Window {
+      Terminal: any;
+      FitAddon: any;
+    }
+  }
+
+  interface DemoState {
+    pyodidePromise: Promise<any> | null;
+    xtermLoaded: boolean;
+  }
+
+  const state: DemoState = {
+    pyodidePromise: null,
+    xtermLoaded: false,
+  };
+
+  function loadScript(src: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = src;
+      s.onload = () => resolve();
+      s.onerror = () => reject(new Error(`Failed to load ${src}`));
+      document.head.appendChild(s);
+    });
+  }
+
+  async function loadXterm(): Promise<void> {
+    if (state.xtermLoaded) return;
+    // xterm.js + addon-fit from jsDelivr ESM bundles.
+    await loadScript('https://cdn.jsdelivr.net/npm/@xterm/xterm@5.4.0/lib/xterm.js');
+    await loadScript('https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0.9.0/lib/addon-fit.js');
+    // Inject xterm.css for cursor styling.
+    if (!document.querySelector('link[data-xterm]')) {
+      const l = document.createElement('link');
+      l.rel = 'stylesheet';
+      l.href = 'https://cdn.jsdelivr.net/npm/@xterm/xterm@5.4.0/css/xterm.css';
+      l.dataset.xterm = 'true';
+      document.head.appendChild(l);
+    }
+    state.xtermLoaded = true;
+  }
+
+  async function loadPyodide(version: string): Promise<any> {
+    if (!state.pyodidePromise) {
+      state.pyodidePromise = (async () => {
+        await loadScript(`https://cdn.jsdelivr.net/pyodide/v${version}/full/pyodide.js`);
+        // @ts-ignore — loadPyodide is added by the script above
+        return await window.loadPyodide({
+          indexURL: `https://cdn.jsdelivr.net/pyodide/v${version}/full/`,
+        });
+      })();
+    }
+    return state.pyodidePromise;
+  }
+
+  function makeInteractiveStdin(term: any, setStatus: (s: string) => void): { stdin: () => Promise<string>; prompt: string } {
+    let resolveStdin: ((s: string) => void) | null = null;
+    let buffer = '';
+
+    term.onData((data: string) => {
+      for (const ch of data) {
+        const code = ch.charCodeAt(0);
+        if (code === 13) {
+          // Enter
+          term.write('\r\n');
+          const line = buffer;
+          buffer = '';
+          if (resolveStdin) {
+            const r = resolveStdin;
+            resolveStdin = null;
+            r(line);
+          }
+        } else if (code === 127) {
+          // Backspace
+          if (buffer.length > 0) {
+            buffer = buffer.slice(0, -1);
+            term.write('\b \b');
+          }
+        } else if (code === 3) {
+          // Ctrl+C
+          term.write('^C\r\n');
+          buffer = '';
+          if (resolveStdin) {
+            const r = resolveStdin;
+            resolveStdin = null;
+            r('');
+          }
+        } else if (code >= 32) {
+          buffer += ch;
+          term.write(ch);
+        }
+      }
+    });
+
+    return {
+      stdin: () => new Promise<string>((resolve) => {
+        resolveStdin = resolve;
+      }),
+      prompt: '',
+    };
+  }
+
+  function makeBatchedStdin(inputs: string[]): { stdin: () => string } {
+    return {
+      stdin: () => inputs.shift() ?? '',
+    };
+  }
+
+  for (const el of Array.from(document.querySelectorAll<HTMLElement>('.pyodide-demo'))) {
+    if (el.dataset.bound === 'true') continue;
+    el.dataset.bound = 'true';
+
+    const button = el.querySelector<HTMLButtonElement>('.demo-run')!;
+    const body = el.querySelector<HTMLElement>('[data-terminal]')!;
+    const statusEl = el.querySelector<HTMLElement>('[data-status]')!;
+    const scriptUrl = el.dataset.scriptUrl!;
+    const inputsAttr = el.dataset.inputs ?? '[]';
+    const inputs: string[] = JSON.parse(inputsAttr);
+    const pyodideCdn = el.dataset.pyodideCdn!;
+    const pyodideVersion = el.dataset.pyodideVersion ?? '0.28.3';
+
+    const setStatus = (s: string) => { statusEl.textContent = s; };
+
+    button.addEventListener('click', async () => {
+      button.disabled = true;
+      const originalText = button.textContent;
+      try {
+        setStatus('Loading xterm.js…');
+        await loadXterm();
+        // @ts-ignore — window.Terminal was set by the script
+        const Terminal = window.Terminal;
+        // @ts-ignore — window.FitAddon was set by the script
+        const FitAddon = window.FitAddon;
+        const term = new Terminal({ cols: 80, rows: 24, fontFamily: 'ui-monospace, monospace', fontSize: 13, cursorBlink: true });
+        const fit = new FitAddon.FitAddon();
+        term.loadAddon(fit);
+        term.open(body);
+        fit.fit();
+        term.write('\x1b[36m=== Python demo ===\x1b[0m\r\n');
+        term.write(`Script: ${scriptUrl}\r\n\r\n`);
+
+        setStatus('Loading Pyodide runtime (~6 MB)…');
+        const pyodide = await loadPyodide(pyodideVersion);
+
+        const useInteractive = inputs.length === 0;
+        const stdinHandler = useInteractive
+          ? makeInteractiveStdin(term, setStatus)
+          : makeBatchedStdin([...inputs]);
+
+        pyodide.setStdout({
+          batched: (s: string) => term.write(s.replace(/\n/g, '\r\n')),
+        });
+        pyodide.setStderr({
+          batched: (s: string) => term.write('\x1b[31m' + s.replace(/\n/g, '\r\n') + '\x1b[0m'),
+        });
+        // @ts-ignore — pyodide expects stdin options
+        pyodide.setStdin({ stdin: stdinHandler.stdin, isatty: useInteractive });
+
+        setStatus('Fetching script…');
+        const res = await fetch(scriptUrl);
+        if (!res.ok) throw new Error(`HTTP ${res.status} fetching ${scriptUrl}`);
+        const src = await res.text();
+        pyodide.FS.writeFile('/home/pyodide/run.py', src);
+
+        setStatus(useInteractive ? 'Running (interactive)' : 'Running');
+        button.textContent = 'Restart';
+
+        await pyodide.runPythonAsync(`
+          import sys
+          sys.argv = ['${scriptUrl.split('/').pop()}']
+          exec(open('/home/pyodide/run.py').read())
+        `);
+
+        setStatus('Done.');
+        term.write('\r\n\x1b[32m[finished]\x1b[0m\r\n');
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        setStatus(`Error: ${msg}`);
+        const term = (body.querySelector('.xterm') as any)?.terminal;
+        if (term) term.write(`\r\n\x1b[31m${msg}\x1b[0m\r\n`);
+        button.textContent = 'Retry';
+      } finally {
+        button.disabled = false;
+        if (button.textContent === originalText) button.textContent = 'Run again';
+      }
+    });
+  }
+</script>

@@ -2,7 +2,7 @@
   {
     "id": "ai-assessment-test-1",
     "name": "AI assessment test 1",
-    "description": "Dockerized n8n assistant for a foreign-languages academy — Telegram, email, and webhook channels, RAG context for schedules/prices/levels, embedding-similarity response caching, Redis, and PostgreSQL.",
+    "description": "Dockerized n8n assistant for a foreign-languages academy \u2014 Telegram, email, and webhook channels, RAG context for schedules/prices/levels, embedding-similarity response caching, Redis, and PostgreSQL.",
     "type": "automation",
     "categories": [
       "education",
@@ -64,7 +64,7 @@
   {
     "id": "ai-assessment-test-2",
     "name": "AI assessment test 2",
-    "description": "VoiceAgent — bilingual Spanish/English voice tutor built with React, Express, browser Speech APIs, NVIDIA NIM (Mistral) function calling for dictionary and translation tools, MongoDB session memory, and a pgvector-ready Postgres. The project is marked incomplete in its README.",
+    "description": "VoiceAgent \u2014 bilingual Spanish/English voice tutor built with React, Express, browser Speech APIs, NVIDIA NIM (Mistral) function calling for dictionary and translation tools, MongoDB session memory, and a pgvector-ready Postgres. The project is marked incomplete in its README.",
     "type": "web-app",
     "categories": [
       "education",
@@ -136,7 +136,7 @@
   {
     "id": "ai-assessment-test-simulacrum",
     "name": "AI assessment test simulacrum",
-    "description": "Practice simulacrum for the AI module assessment test — an n8n workflow that automates multi-channel veterinary triage, urgency escalation, RAG-based responses, and metric logging. The project is marked incomplete in its README.",
+    "description": "Practice simulacrum for the AI module assessment test \u2014 an n8n workflow that automates multi-channel veterinary triage, urgency escalation, RAG-based responses, and metric logging. The project is marked incomplete in its README.",
     "type": "automation",
     "categories": [
       "education",
@@ -411,7 +411,7 @@
   {
     "id": "python-assessment-test-1",
     "name": "Assessment test 1",
-    "description": "Module 1 final test — a console-based library system that manages inventory, customers, sales, and reporting entirely in memory.",
+    "description": "Module 1 final test \u2014 a console-based library system that manages inventory, customers, sales, and reporting entirely in memory.",
     "type": "cli",
     "categories": [
       "education",
@@ -660,7 +660,7 @@
   {
     "id": "python-user-story-1",
     "name": "User Story 1",
-    "description": "First user story from Module 1 — registers products with name, price, and stock, then calculates total units and estimated cost.",
+    "description": "First user story from Module 1 \u2014 registers products with name, price, and stock, then calculates total units and estimated cost.",
     "type": "script",
     "categories": [
       "education",
@@ -708,7 +708,7 @@
   {
     "id": "python-user-story-2",
     "name": "User Story 2",
-    "description": "Second user story from Module 1 — manages an in-memory product inventory through an interactive menu with statistics and input validation.",
+    "description": "Second user story from Module 1 \u2014 manages an in-memory product inventory through an interactive menu with statistics and input validation.",
     "type": "script",
     "categories": [
       "education",
@@ -759,7 +759,7 @@
   {
     "id": "python-user-story-3",
     "name": "User Story 3",
-    "description": "Third user story from Module 1 — modular CSV-backed inventory with CRUD operations, statistics, validation, and error management.",
+    "description": "Third user story from Module 1 \u2014 modular CSV-backed inventory with CRUD operations, statistics, validation, and error management.",
     "type": "script",
     "categories": [
       "education",
@@ -860,7 +860,7 @@
   {
     "id": "python-workshop-2",
     "name": "Python Workshop 2",
-    "description": "Module 1 Workshop 2 — a single Python script that registers, lists, searches, updates, and removes inventory products.",
+    "description": "Module 1 Workshop 2 \u2014 a single Python script that registers, lists, searches, updates, and removes inventory products.",
     "type": "script",
     "categories": [
       "education",
@@ -909,7 +909,7 @@
   {
     "id": "web-assessment-test-2",
     "name": "Assessment test 2",
-    "description": "Module 2 assessment test — responsive recreation of the Clipboard product landing page using semantic HTML, external CSS with Google Fonts, and Flexbox/CSS Grid for desktop, tablet, and phone breakpoints.",
+    "description": "Module 2 assessment test \u2014 responsive recreation of the Clipboard product landing page using semantic HTML, external CSS with Google Fonts, and Flexbox/CSS Grid for desktop, tablet, and phone breakpoints.",
     "type": "static-site",
     "categories": [
       "education",
@@ -962,7 +962,7 @@
   {
     "id": "web-assessment-test-3",
     "name": "Assessment test 3",
-    "description": "CRUDZASO — role-based task management web app with admin and user views, status and priority tracking, and JSON Server as the mock REST API. User-facing settings and full user functionality are still pending; this iteration is in active development.",
+    "description": "CRUDZASO \u2014 role-based task management web app with admin and user views, status and priority tracking, and JSON Server as the mock REST API. User-facing settings and full user functionality are still pending; this iteration is in active development.",
     "type": "web-app",
     "categories": [
       "education",
@@ -1022,7 +1022,7 @@
   {
     "id": "web-assessment-test-3-simulacrum",
     "name": "Assessment test 3 simulacrum",
-    "description": "RestorApp — restaurant food ordering web application with multi-channel authentication, category-based menu, cart, order history, and an admin dashboard backed by JSON Server.",
+    "description": "RestorApp \u2014 restaurant food ordering web application with multi-channel authentication, category-based menu, cart, order history, and an admin dashboard backed by JSON Server.",
     "type": "web-app",
     "categories": [
       "education",
@@ -1436,7 +1436,7 @@
   {
     "id": "web-simple-storage",
     "name": "Simple Storage",
-    "description": "Module 3 user story — small full-stack application that performs user CRUD through a vanilla HTML/CSS/JS frontend and a json-server mock REST API.",
+    "description": "Module 3 user story \u2014 small full-stack application that performs user CRUD through a vanilla HTML/CSS/JS frontend and a json-server mock REST API.",
     "type": "web-app",
     "categories": [
       "education",
@@ -1495,7 +1495,7 @@
   {
     "id": "web-user-story-4",
     "name": "User Story 4",
-    "description": "Module 3 user story 1 — interactive JavaScript that greets users by name, validates their age, and reports whether they are a minor or an adult using prompts, alerts, and try-catch error handling.",
+    "description": "Module 3 user story 1 \u2014 interactive JavaScript that greets users by name, validates their age, and reports whether they are a minor or an adult using prompts, alerts, and try-catch error handling.",
     "type": "script",
     "categories": [
       "education",
@@ -1544,7 +1544,7 @@
   {
     "id": "web-user-story-5",
     "name": "User Story 5",
-    "description": "Module 3 user story 2 — demonstrates JavaScript data structures (Set, Map, Object) through a Productos class with a static ID counter and object utility methods.",
+    "description": "Module 3 user story 2 \u2014 demonstrates JavaScript data structures (Set, Map, Object) through a Productos class with a static ID counter and object utility methods.",
     "type": "script",
     "categories": [
       "education",
@@ -1594,7 +1594,7 @@
   {
     "id": "web-user-story-6",
     "name": "User Story 6",
-    "description": "Module 3 user story 3 — Kepler 22b forum with account and post CRUD operations, persisted through JSON Server and local storage, themed around the Sinteryum/Dartumbria/Midnight Twilight lore.",
+    "description": "Module 3 user story 3 \u2014 Kepler 22b forum with account and post CRUD operations, persisted through JSON Server and local storage, themed around the Sinteryum/Dartumbria/Midnight Twilight lore.",
     "type": "web-app",
     "categories": [
       "education",
@@ -1652,7 +1652,7 @@
   {
     "id": "web-user-story-7",
     "name": "User Story 7",
-    "description": "Module 3 user story 4 — expansion of the Kepler 22b forum with persisted users, authentication, and post management backed by JSON Server and local storage.",
+    "description": "Module 3 user story 4 \u2014 expansion of the Kepler 22b forum with persisted users, authentication, and post management backed by JSON Server and local storage.",
     "type": "web-app",
     "categories": [
       "education",

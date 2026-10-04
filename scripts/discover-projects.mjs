@@ -163,7 +163,6 @@ async function discoverRepo(owner, name, defaultBranch, validate) {
   const errors = [];
 
   for (const filePath of treePaths) {
-    const label = `${owner}/${name}@${defaultBranch}:${filePath}`;
     try {
       const text = await fetchProjectYmlFromContentsApi(owner, name, defaultBranch, filePath);
       if (text === null) {

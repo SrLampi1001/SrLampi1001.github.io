@@ -1,7 +1,7 @@
 ---
-import type { Project } from '../lib/projects';
+import type { DiscoveredProject } from '../lib/projects';
 interface Props {
-  project: Project;
+  project: DiscoveredProject;
 }
 const { project } = Astro.props;
 ---
@@ -26,7 +26,7 @@ const { project } = Astro.props;
     </ul>
   )}
   <p class="meta" style="margin-top: var(--space-3); font-size: var(--text-sm); color: var(--muted);">
-    <a href={project._meta?.html_url ?? project.repository.url} target="_blank" rel="noopener">View on GitHub ↗</a>
+    <a href={project._meta?.html_url} target="_blank" rel="noopener">View on GitHub ↗</a>
     {project._meta?.branch && (
       <span> · <code style="font-size: 0.9em;">{project._meta.branch}</code></span>
     )}

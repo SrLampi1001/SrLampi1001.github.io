@@ -6,18 +6,25 @@
   "description": "SrLampi1001 project portfolio platform",
   "scripts": {
     "dev": "astro dev",
+    "prebuild": "node scripts/generate-types.mjs",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
+    "typecheck": "astro check",
     "validate": "node scripts/validate-yaml.mjs",
     "validate:file": "node scripts/validate-yaml.mjs",
     "discover": "node scripts/discover-projects.mjs",
     "build:full": "node scripts/discover-projects.mjs && astro build"
   },
   "dependencies": {
-    "astro": "^5.0.0",
-    "yaml": "^2.6.0",
     "ajv": "^8.17.0",
-    "ajv-formats": "^3.0.1"
+    "ajv-formats": "^3.0.1",
+    "astro": "^5.0.0",
+    "yaml": "^2.6.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "json-schema-to-typescript": "^16.0.0",
+    "typescript": "^5.9.3"
   }
 }
