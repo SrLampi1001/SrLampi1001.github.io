@@ -1,0 +1,11 @@
+[
+  { "repo": "SrLampi1001/riwi_projects", "enabled": true },
+  { "repo": "SrLampi1001/employment_assessment_test", "enabled": false, "note": "waiting on project.yml" },
+  { "repo": "SrLampi1001/kepler_page", "enabled": false, "note": "waiting on project.yml" },
+  { "repo": "SrLampi1001/platzi_projects", "enabled": false, "note": "waiting on project.yml" },
+  { "repo": "SrLampi1001/PORTFOLIO", "enabled": false, "note": "old portfolio; keep as link only" },
+  { "repo": "SrLampi1001/silent_dragons", "enabled": false, "note": "not a software project; personal mod" },
+  { "repo": "SrLampi1001/simple-cli-coder-with-rag", "enabled": false, "note": "waiting on project.yml" },
+  { "repo": "SrLampi1001/SrLampi1001", "enabled": false, "note": "profile README repo" },
+  { "repo": "SrLampi1001/SrLampi1001.github.io", "enabled": false, "note": "this portfolio -- skip" }
+]

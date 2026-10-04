@@ -10,7 +10,9 @@
     "preview": "astro preview",
     "astro": "astro",
     "validate": "node scripts/validate-yaml.mjs",
-    "validate:file": "node scripts/validate-yaml.mjs"
+    "validate:file": "node scripts/validate-yaml.mjs",
+    "discover": "node scripts/discover-projects.mjs",
+    "build:full": "node scripts/discover-projects.mjs && astro build"
   },
   "dependencies": {
     "astro": "^5.0.0",

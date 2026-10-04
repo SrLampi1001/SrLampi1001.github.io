@@ -1,0 +1,54 @@
+[
+  {
+    "id": "riwi-projects",
+    "name": "Riwi Projects",
+    "description": "Monorepo of all small and medium-size projects made at Riwi outside of organizations, organized by training module as a collection of sub-collections and standalone projects.",
+    "type": "collection",
+    "categories": [
+      "education",
+      "personal-portfolio",
+      "monorepo"
+    ],
+    "tags": [
+      "riwi",
+      "training",
+      "subtrees",
+      "submodules"
+    ],
+    "tech_stack": {
+      "languages": [
+        "markdown"
+      ],
+      "tools": [
+        "git",
+        "subtrees",
+        "submodules"
+      ]
+    },
+    "repository": {
+      "provider": "github",
+      "owner": "SrLampi1001",
+      "name": "riwi_projects",
+      "branch": "develop"
+    },
+    "documentation": {
+      "readme": true
+    },
+    "presentation": {
+      "featured": true,
+      "order": 0
+    },
+    "_meta": {
+      "repo": "SrLampi1001/riwi_projects",
+      "path": "project.yml",
+      "branch": "main",
+      "url": "https://github.com/SrLampi1001/riwi_projects",
+      "html_url": "https://github.com/SrLampi1001/riwi_projects",
+      "description": "This repository consolidates and shows all the scattered small and medium size repositories made during Riwi training. Mainly composed of Python, JavaScript and web development frameworks",
+      "language": "JavaScript",
+      "pushed_at": "2026-09-28T13:27:28Z",
+      "stargazers_count": 0,
+      "default_branch": "main"
+    }
+  }
+]
