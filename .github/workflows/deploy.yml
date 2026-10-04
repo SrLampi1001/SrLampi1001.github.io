@@ -2,7 +2,7 @@ name: Deploy portfolio
 
 on:
   push:
-    branches: [develop]
+    branches: [main]
   workflow_dispatch:
   schedule:
     # Every 6 hours. Backstop for missed pushes; picks up changes to
