@@ -1,0 +1,44 @@
+---
+// Per-tag page. Generates one static page per distinct tag.
+
+import '../../styles/global.css';
+import SiteHeader from '../../components/SiteHeader.astro';
+import ProjectCard from '../../components/ProjectCard.astro';
+import { distinctTags, projectsByTag } from '../../lib/projects';
+
+export async function getStaticPaths() {
+  return distinctTags().map((tag) => ({
+    params: { tag },
+    props: {
+      tag,
+      projects: projectsByTag(tag),
+    },
+  }));
+}
+
+const { tag, projects } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>{tag} — SrLampi1001 portfolio</title>
+  </head>
+  <body>
+    <SiteHeader current="tags" />
+
+    <a href="/" class="back-link">← Back to home</a>
+
+    <h1>Tag: {tag}</h1>
+    <p class="desc">
+      {projects.length} project{projects.length === 1 ? '' : 's'} tagged with this.
+    </p>
+
+    <div class="grid">
+      {projects.map((p) => <ProjectCard project={p} />)}
+    </div>
+
+  </body>
+</html>

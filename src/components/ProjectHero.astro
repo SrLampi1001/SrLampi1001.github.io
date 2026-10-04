@@ -1,0 +1,37 @@
+---
+import type { Project } from '../lib/projects';
+interface Props {
+  project: Project;
+}
+const { project } = Astro.props;
+---
+<section class="hero">
+  <h2>
+    {project.presentation?.featured && <span aria-hidden="true">★ </span>}
+    {project.name}
+  </h2>
+  <p class="desc">{project.description}</p>
+  <ul class="chips type">
+    <li>{project.type}</li>
+    {project.status && <li>{project.status}</li>}
+  </ul>
+  {project.categories && project.categories.length > 0 && (
+    <ul class="chips">
+      {project.categories.map((c) => <li>{c}</li>)}
+    </ul>
+  )}
+  {project.tags && project.tags.length > 0 && (
+    <ul class="chips tag">
+      {project.tags.map((t) => <li>{t}</li>)}
+    </ul>
+  )}
+  <p class="meta" style="margin-top: var(--space-3); font-size: var(--text-sm); color: var(--muted);">
+    <a href={project._meta?.html_url ?? project.repository.url} target="_blank" rel="noopener">View on GitHub ↗</a>
+    {project._meta?.branch && (
+      <span> · <code style="font-size: 0.9em;">{project._meta.branch}</code></span>
+    )}
+    {project.demo?.enabled && (
+      <span> · Demo: <code style="font-size: 0.9em;">{project.demo.type}</code></span>
+    )}
+  </p>
+</section>

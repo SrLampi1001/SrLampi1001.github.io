@@ -1,0 +1,156 @@
+---
+// Per-project detail page. Generates one static page per discovered
+// project from src/data/projects.json.
+
+import '../../styles/global.css';
+import SiteHeader from '../../components/SiteHeader.astro';
+import ProjectHero from '../../components/ProjectHero.astro';
+import ProjectSidebar from '../../components/ProjectSidebar.astro';
+import ProjectCard from '../../components/ProjectCard.astro';
+import { allProjects, relatedProjects } from '../../lib/projects';
+
+export async function getStaticPaths() {
+  return allProjects.map((p) => ({
+    params: { id: p.id },
+    props: { project: p },
+  }));
+}
+
+const { project } = Astro.props;
+const related = relatedProjects(project, 3);
+
+// Determine whether to show the "Components" section (if the project
+// declares any components). Otherwise hide it.
+const components = project.components ? Object.entries(project.components).filter(([_, v]) => v) : [];
+
+// Show the demo section if a demo is enabled.
+const hasDemo = !!project.demo?.enabled;
+
+// Show the docs section if documentation references are present.
+const hasDocs = !!project.documentation;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>{project.name} — SrLampi1001 portfolio</title>
+    <meta name="description" content={project.description} />
+  </head>
+  <body>
+    <SiteHeader current="projects" />
+
+    <a href="/" class="back-link">← Back to all projects</a>
+
+    <ProjectHero project={project} />
+
+    <ul class="tab-strip">
+      <li><a href="#overview">Overview</a></li>
+      <li><a href="#tech">Tech</a></li>
+      {hasDemo && <li><a href="#demo">Demo</a></li>}
+      {hasDocs && <li><a href="#docs">Docs</a></li>}
+      <li><a href="#related">Related</a></li>
+    </ul>
+
+    <div class="layout-with-sidebar">
+      <div class="main-content">
+        <h2 id="overview">Overview</h2>
+        <p>{project.description}</p>
+
+        {components.length > 0 && (
+          <>
+            <h3>What this includes</h3>
+            <ul class="chips">
+              {components.map(([k]) => <li>{k}</li>)}
+            </ul>
+          </>
+        )}
+
+        <h2 id="tech">Tech stack</h2>
+        {(() => {
+          const ts = project.tech_stack ?? {};
+          const slots = ['languages', 'frameworks', 'libraries', 'databases', 'infrastructure', 'ai', 'tools'] as const;
+          const present = slots.filter((s) => ts[s]?.length);
+          if (present.length === 0) {
+            return <p class="desc"><em>No tech stack declared.</em></p>;
+          }
+          return (
+            <dl>
+              {present.map((s) => (
+                <>
+                  <dt>{s}</dt>
+                  <dd>
+                    <ul class={`chips ${s === 'languages' ? 'language' : s === 'tools' ? 'type' : ''}`} style="margin: 0; padding: 0; list-style: none;">
+                      {ts[s]!.map((v) => <li>{v}</li>)}
+                    </ul>
+                  </dd>
+                </>
+              ))}
+            </dl>
+          );
+        })()}
+
+        {hasDemo && (
+          <>
+            <h2 id="demo">Demo</h2>
+            <div class="hero" style="background: var(--bg); border-style: dashed;">
+              <p style="margin: 0;">
+                <strong>Demo type:</strong> <code>{project.demo!.type}</code>
+                {project.demo!.runtime && <> · runtime: <code>{project.demo!.runtime}</code></>}
+                {project.demo!.entrypoint && <> · entrypoint: <code>{project.demo!.entrypoint}</code></>}
+              </p>
+              <p class="desc" style="margin-top: var(--space-3);">
+                Interactive demo integration lands in step 8. For now, this section
+                records the demo configuration from <code>project.yml</code>.
+              </p>
+            </div>
+          </>
+        )}
+
+        {hasDocs && (
+          <>
+            <h2 id="docs">Documentation</h2>
+            {project.documentation.readme && (
+              <p>
+                <a href={`https://github.com/${project.repository.owner}/${project.repository.name}#readme`} target="_blank" rel="noopener">README.md ↗</a>
+              </p>
+            )}
+            {project.documentation.architecture && (
+              <p>
+                Architecture: <code>{project.documentation.architecture.path}</code>
+              </p>
+            )}
+            {project.documentation.api && (
+              <p>
+                API docs: <code>{project.documentation.api.path}</code>
+              </p>
+            )}
+            {(project.documentation.folders ?? project.documentation['documentation-folder']) && (
+              <>
+                <p>Additional documentation folders:</p>
+                <ul>
+                  {(project.documentation.folders ?? project.documentation['documentation-folder']!).map((f) => (
+                    <li><code>{f.path}</code></li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </>
+        )}
+
+        {related.length > 0 && (
+          <>
+            <h2 id="related">Related projects</h2>
+            <div class="grid">
+              {related.map((p) => <ProjectCard project={p} compact />)}
+            </div>
+          </>
+        )}
+      </div>
+
+      <ProjectSidebar project={project} />
+    </div>
+
+  </body>
+</html>

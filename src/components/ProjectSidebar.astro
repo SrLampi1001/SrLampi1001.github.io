@@ -1,0 +1,76 @@
+---
+import type { Project } from '../lib/projects';
+interface Props {
+  project: Project;
+}
+const { project } = Astro.props;
+
+const slots = project.deployment ? Object.entries(project.deployment) : [];
+---
+<aside class="sidebar">
+  <h4>Repository</h4>
+  <p style="margin: 0 0 var(--space-3); font-size: var(--text-sm);">
+    <a href={project._meta?.html_url} target="_blank" rel="noopener">{project.repository.owner}/{project.repository.name}</a>
+    <br />
+    <span style="color: var(--muted);">branch: <code>{project._meta?.branch ?? 'main'}</code></span>
+  </p>
+
+  {slots.length > 0 && (
+    <>
+      <h4>Deployment</h4>
+      <ul style="list-style: none; padding: 0; margin: 0; font-size: var(--text-sm);">
+        {slots.map(([slot, entry]) => (
+          <li style="margin-bottom: var(--space-2);">
+            <strong style="text-transform: capitalize;">{slot}:</strong>{' '}
+            <code>{entry.type}</code>
+            {entry.url && (
+              <>
+                {' '}— <a href={entry.url} target="_blank" rel="noopener">live ↗</a>
+              </>
+            )}
+            {entry.active === false && <span style="color: var(--muted);"> (inactive)</span>}
+          </li>
+        ))}
+      </ul>
+    </>
+  )}
+
+  <h4>Status</h4>
+  <p style="margin: 0; font-size: var(--text-sm);">
+    <span style={`display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: ${
+      project.status === 'completed' ? '#16a34a' :
+      project.status === 'wip' || project.status === 'in progress' || project.status === 'in-progress' || project.status === 'incomplete' ? '#eab308' :
+      project.status === 'archived' ? '#9ca3af' :
+      project.status === 'experimental' ? '#f97316' :
+      project.status === 'active' ? '#22c55e' :
+      project.status === 'maintained' ? '#3b82f6' :
+      '#9ca3af'
+    }; margin-right: 6px; vertical-align: middle;`}></span>
+    {project.status ?? 'maintained'}
+  </p>
+
+  {project.demo?.enabled && (
+    <>
+      <h4>Demo</h4>
+      <p style="margin: 0; font-size: var(--text-sm);">
+        <strong>{project.demo.type}</strong>
+        {project.demo.runtime && <> · <code>{project.demo.runtime}</code></>}
+        {project.demo.entrypoint && (
+          <>
+            <br />
+            <code style="font-size: 0.85em;">{project.demo.entrypoint}</code>
+          </>
+        )}
+      </p>
+    </>
+  )}
+
+  {project.components && Object.keys(project.components).length > 0 && (
+    <>
+      <h4>Components</h4>
+      <ul class="chips" style="margin: 0;">
+        {Object.entries(project.components).filter(([_, v]) => v).map(([k]) => <li>{k}</li>)}
+      </ul>
+    </>
+  )}
+</aside>
