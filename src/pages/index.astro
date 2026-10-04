@@ -1,0 +1,209 @@
+---
+// Step 1 — smoke test.
+//
+// Fetches project.yml from a sibling repository at build time,
+// parses it, and renders every property on the page.
+//
+// This file will be deleted in Step 2 once the real portfolio
+// routing replaces it.
+
+import * as YAML from 'yaml';
+
+// Configuration for the smoke test. Hardcoded for now; Step 2 will
+// introduce a proper discovery workflow + project list.
+const SOURCE = {
+  owner: 'SrLampi1001',
+  name: 'riwi_projects',
+  branch: 'main', // hardcoded for now; the file says 'develop' but
+                  // GitHub's default branch is 'main'. Step 2 will
+                  // resolve which one wins.
+  path: 'project.yml',
+};
+
+const RAW_URL =
+  `https://raw.githubusercontent.com/${SOURCE.owner}/${SOURCE.name}` +
+  `/${SOURCE.branch}/${SOURCE.path}`;
+
+let project: any = null;
+let fetchError: string | null = null;
+let fetchedAt: string;
+let rawBytes: number = 0;
+
+try {
+  const response = await fetch(RAW_URL);
+  if (!response.ok) {
+    fetchError = `HTTP ${response.status} ${response.statusText} for ${RAW_URL}`;
+  } else {
+    const text = await response.text();
+    rawBytes = text.length;
+    const doc = YAML.parse(text);
+    project = doc?.project ?? null;
+    if (!project) {
+      fetchError = `YAML parsed but had no "project:" root key.`;
+    }
+  }
+} catch (err) {
+  fetchError = err instanceof Error ? err.message : String(err);
+}
+
+fetchedAt = new Date().toISOString();
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>
+      {project?.name ? `${project.name} — smoke test` : 'Smoke test'}
+    </title>
+    <style>
+      :root {
+        --fg: #1a1a1a;
+        --muted: #666;
+        --bg: #fafafa;
+        --border: #e5e5e5;
+        --accent: #2563eb;
+        --error-bg: #fef2f2;
+        --error-fg: #991b1b;
+      }
+      body {
+        font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+        color: var(--fg);
+        background: var(--bg);
+        max-width: 720px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+        line-height: 1.5;
+      }
+      h1 { margin-bottom: 0.25rem; }
+      .desc { color: var(--muted); margin-top: 0; }
+      dl { display: grid; grid-template-columns: 8rem 1fr; gap: 0.5rem 1rem; }
+      dt { color: var(--muted); }
+      dd { margin: 0; font-family: ui-monospace, monospace; font-size: 0.95em; }
+      ul { margin: 0; padding-left: 1.25rem; }
+      .chips { display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0; list-style: none; }
+      .chips li { background: #eef2ff; color: #3730a3; padding: 0.15rem 0.6rem; border-radius: 9999px; font-size: 0.85em; }
+      section { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+      section h2 { font-size: 1.1rem; margin-bottom: 0.5rem; }
+      .meta { color: var(--muted); font-size: 0.85em; margin-top: 2rem; padding-top: 1rem; border-top: 1px dashed var(--border); }
+      .meta code { background: #e5e5e5; padding: 0.1rem 0.3rem; border-radius: 3px; }
+      .error { background: var(--error-bg); color: var(--error-fg); padding: 1rem; border-radius: 6px; }
+    </style>
+  </head>
+  <body>
+
+    {fetchError ? (
+      <div class="error">
+        <strong>Failed to load project.yml.</strong>
+        <p>{fetchError}</p>
+      </div>
+    ) : (
+      <>
+        <h1>{project.name}</h1>
+        <p class="desc">{project.description}</p>
+
+        <section>
+          <h2>Identity</h2>
+          <dl>
+            <dt>id</dt><dd>{project.id}</dd>
+            <dt>type</dt><dd>{project.type}</dd>
+            <dt>status</dt><dd>{project.status ?? '— (not declared)'}</dd>
+          </dl>
+        </section>
+
+        <section>
+          <h2>Categories</h2>
+          {project.categories?.length ? (
+            <ul class="chips">
+              {project.categories.map((c: string) => <li>{c}</li>)}
+            </ul>
+          ) : <p><em>none</em></p>}
+        </section>
+
+        <section>
+          <h2>Tags</h2>
+          {project.tags?.length ? (
+            <ul class="chips">
+              {project.tags.map((t: string) => <li>{t}</li>)}
+            </ul>
+          ) : <p><em>none</em></p>}
+        </section>
+
+        <section>
+          <h2>Repository</h2>
+          <dl>
+            <dt>provider</dt><dd>{project.repository?.provider ?? '—'}</dd>
+            <dt>owner</dt><dd>{project.repository?.owner ?? '—'}</dd>
+            <dt>name</dt><dd>{project.repository?.name ?? '—'}</dd>
+            <dt>branch</dt><dd>{project.repository?.branch ?? '—'}</dd>
+          </dl>
+        </section>
+
+        <section>
+          <h2>Tech stack</h2>
+          <dl>
+            <dt>languages</dt>
+            <dd>
+              {project.tech_stack?.languages?.length
+                ? <ul>{project.tech_stack.languages.map((l: string) => <li>{l}</li>)}</ul>
+                : '—'}
+            </dd>
+            <dt>frameworks</dt>
+            <dd>
+              {project.tech_stack?.frameworks?.length
+                ? <ul>{project.tech_stack.frameworks.map((l: string) => <li>{l}</li>)}</ul>
+                : '—'}
+            </dd>
+            <dt>libraries</dt>
+            <dd>
+              {project.tech_stack?.libraries?.length
+                ? <ul>{project.tech_stack.libraries.map((l: string) => <li>{l}</li>)}</ul>
+                : '—'}
+            </dd>
+            <dt>databases</dt>
+            <dd>
+              {project.tech_stack?.databases?.length
+                ? <ul>{project.tech_stack.databases.map((l: string) => <li>{l}</li>)}</ul>
+                : '—'}
+            </dd>
+            <dt>infrastructure</dt>
+            <dd>
+              {project.tech_stack?.infrastructure?.length
+                ? <ul>{project.tech_stack.infrastructure.map((l: string) => <li>{l}</li>)}</ul>
+                : '—'}
+            </dd>
+            <dt>tools</dt>
+            <dd>
+              {project.tech_stack?.tools?.length
+                ? <ul>{project.tech_stack.tools.map((l: string) => <li>{l}</li>)}</ul>
+                : '—'}
+            </dd>
+          </dl>
+        </section>
+
+        <section>
+          <h2>Documentation</h2>
+          <dl>
+            <dt>readme</dt><dd>{String(project.documentation?.readme ?? '—')}</dd>
+          </dl>
+        </section>
+
+        <section>
+          <h2>Presentation</h2>
+          <dl>
+            <dt>featured</dt><dd>{String(project.presentation?.featured ?? '—')}</dd>
+            <dt>order</dt><dd>{String(project.presentation?.order ?? '—')}</dd>
+          </dl>
+        </section>
+      </>
+    )}
+
+    <p class="meta">
+      Built at <code>{fetchedAt}</code><br />
+      Fetched <code>{rawBytes}</code> bytes from <code>{RAW_URL}</code><br />
+      Smoke test (Step 1) — see <code>docs/00-getting-started.md</code>.
+    </p>
+
+  </body>
+</html>

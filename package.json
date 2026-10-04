@@ -1,0 +1,17 @@
+{
+  "name": "srlampi1001-portfolio",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "SrLampi1001 project portfolio platform",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "astro": "^5.0.0",
+    "yaml": "^2.6.0"
+  }
+}
