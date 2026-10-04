@@ -909,7 +909,15 @@
       "enabled": true,
       "type": "python",
       "runtime": "pyodide",
-      "entrypoint": "python/workshop_2/taller2.py"
+      "entrypoint": "python/workshop_2/taller2.py",
+      "inputs": [
+        "1",
+        "Demo Product",
+        "9.99",
+        "3",
+        "2",
+        "5"
+      ]
     }
   },
   {

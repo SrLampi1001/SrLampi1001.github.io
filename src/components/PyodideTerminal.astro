@@ -1,15 +1,23 @@
 ---
 // Interactive Python demo using Pyodide + xterm.js.
 //
-// Lazy-loads both libraries on first click (the Pyodide runtime is
-// ~6 MB compressed; we don't ship it on every page load).
+// Pyodide 0.28's stdin handler is fully synchronous (it accepts
+// strings, Uint8Arrays, or bytes — not Promises). Returning a
+// Promise causes `OSError: I/O error` from Python's `input()`.
 //
-// Modes:
-//   - If `inputs` is provided, they're fed to Python's input() in order
-//     (deterministic replay).
-//   - If `inputs` is empty, the terminal becomes interactive: xterm.js
-//     captures keystrokes and feeds them to input() when the user
-//     presses Enter. See docs/05-demo-system.md §7.2.
+// The simplest correct approach is a sync queue: stdin returns the
+// next line from the queue, or `null` for EOF. Two modes:
+//
+//   - Pre-baked: `inputs` non-empty. The queue is pre-populated; the
+//     script runs deterministically.
+//   - Interactive: `inputs` empty. The user must type and press
+//     Enter BEFORE Python reads stdin. Limited to scripts whose first
+//     input is needed after the user can react.
+//
+// True interactive stdin (where the user can respond mid-execution
+// to `input()` calls inside a long-running script) requires running
+// Pyodide in a Web Worker so a busy-wait doesn't freeze the UI. That's
+// a follow-up step; see docs/STEP-9-FIXES.md.
 
 interface Props {
   /** Repository owner (used to build raw.githubusercontent.com URL) */
@@ -20,7 +28,7 @@ interface Props {
   branch?: string;
   /** Path to the Python script inside the repo */
   entrypoint: string;
-  /** Optional pre-baked inputs (string array). Empty = interactive. */
+  /** Pre-baked inputs (one string per call to input()). */
   inputs?: string[];
   /** Display label (defaults to the entrypoint) */
   label?: string;
@@ -75,10 +83,11 @@ const pyodideCdn = `https://cdn.jsdelivr.net/pyodide/v${pyodideVersion}/full/`;
   .demo-run:hover { background: #16a34a; }
   .demo-run:disabled { background: #4b5563; cursor: wait; color: #d1d5db; }
   .demo-body {
-    height: 360px;
+    height: 480px;
     background: #1a1a1a;
     color: #f3f4f6;
     padding: var(--space-2);
+    overflow: auto;
   }
   .demo-body :global(.xterm) { height: 100%; }
   .demo-body :global(.xterm-viewport) { background-color: transparent !important; }
@@ -94,21 +103,30 @@ const pyodideCdn = `https://cdn.jsdelivr.net/pyodide/v${pyodideVersion}/full/`;
 </style>
 
 <script>
-  // Client-side runtime. Lazy-loads Pyodide and xterm.js on first click.
+  // Client-side runtime.
+  //
+  // Pyodide's stdin handler is fully synchronous (per Pyodide 0.28 docs:
+  // https://pyodide.org/en/stable/usage/streams.html). Returning a
+  // Promise from stdin causes `OSError: I/O error` from Python's
+  // input() because Pyodide can't await it. We use a synchronous
+  // queue instead.
+  //
+  // For interactive use (where the user types in response to prompts
+  // while the script runs), the user must type and press Enter
+  // BEFORE Python reaches the input() call. The visible char-by-char
+  // echo is handled separately via term.onData — that's just display,
+  // not Python's stdin.
+
   declare global {
     interface Window {
       Terminal: any;
       FitAddon: any;
+      loadPyodide: any;
     }
   }
 
-  interface DemoState {
-    pyodidePromise: Promise<any> | null;
-    xtermLoaded: boolean;
-  }
-
-  const state: DemoState = {
-    pyodidePromise: null,
+  const state = {
+    pyodidePromise: null as Promise<any> | null,
     xtermLoaded: false,
   };
 
@@ -122,12 +140,10 @@ const pyodideCdn = `https://cdn.jsdelivr.net/pyodide/v${pyodideVersion}/full/`;
     });
   }
 
-  async function loadXterm(): Promise<void> {
-    if (state.xtermLoaded) return;
-    // xterm.js + addon-fit from jsDelivr ESM bundles.
+  async function loadXterm(): Promise<{ Terminal: any; FitAddon: any }> {
+    if (state.xtermLoaded) return { Terminal: window.Terminal, FitAddon: window.FitAddon };
     await loadScript('https://cdn.jsdelivr.net/npm/@xterm/xterm@5.4.0/lib/xterm.js');
     await loadScript('https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0.9.0/lib/addon-fit.js');
-    // Inject xterm.css for cursor styling.
     if (!document.querySelector('link[data-xterm]')) {
       const l = document.createElement('link');
       l.rel = 'stylesheet';
@@ -136,13 +152,13 @@ const pyodideCdn = `https://cdn.jsdelivr.net/pyodide/v${pyodideVersion}/full/`;
       document.head.appendChild(l);
     }
     state.xtermLoaded = true;
+    return { Terminal: window.Terminal, FitAddon: window.FitAddon };
   }
 
   async function loadPyodide(version: string): Promise<any> {
     if (!state.pyodidePromise) {
       state.pyodidePromise = (async () => {
         await loadScript(`https://cdn.jsdelivr.net/pyodide/v${version}/full/pyodide.js`);
-        // @ts-ignore — loadPyodide is added by the script above
         return await window.loadPyodide({
           indexURL: `https://cdn.jsdelivr.net/pyodide/v${version}/full/`,
         });
@@ -151,58 +167,11 @@ const pyodideCdn = `https://cdn.jsdelivr.net/pyodide/v${pyodideVersion}/full/`;
     return state.pyodidePromise;
   }
 
-  function makeInteractiveStdin(term: any, setStatus: (s: string) => void): { stdin: () => Promise<string>; prompt: string } {
-    let resolveStdin: ((s: string) => void) | null = null;
-    let buffer = '';
-
-    term.onData((data: string) => {
-      for (const ch of data) {
-        const code = ch.charCodeAt(0);
-        if (code === 13) {
-          // Enter
-          term.write('\r\n');
-          const line = buffer;
-          buffer = '';
-          if (resolveStdin) {
-            const r = resolveStdin;
-            resolveStdin = null;
-            r(line);
-          }
-        } else if (code === 127) {
-          // Backspace
-          if (buffer.length > 0) {
-            buffer = buffer.slice(0, -1);
-            term.write('\b \b');
-          }
-        } else if (code === 3) {
-          // Ctrl+C
-          term.write('^C\r\n');
-          buffer = '';
-          if (resolveStdin) {
-            const r = resolveStdin;
-            resolveStdin = null;
-            r('');
-          }
-        } else if (code >= 32) {
-          buffer += ch;
-          term.write(ch);
-        }
-      }
-    });
-
-    return {
-      stdin: () => new Promise<string>((resolve) => {
-        resolveStdin = resolve;
-      }),
-      prompt: '',
-    };
-  }
-
-  function makeBatchedStdin(inputs: string[]): { stdin: () => string } {
-    return {
-      stdin: () => inputs.shift() ?? '',
-    };
-  }
+  // Per-element state. We track the active xterm Terminal per
+  // container so re-running disposes the old before creating a new
+  // one. Without this, every click on "Run" stacks another terminal
+  // inside the same container.
+  const containerState = new WeakMap<HTMLElement, { term: any; fit: any }>();
 
   for (const el of Array.from(document.querySelectorAll<HTMLElement>('.pyodide-demo'))) {
     if (el.dataset.bound === 'true') continue;
@@ -214,36 +183,54 @@ const pyodideCdn = `https://cdn.jsdelivr.net/pyodide/v${pyodideVersion}/full/`;
     const scriptUrl = el.dataset.scriptUrl!;
     const inputsAttr = el.dataset.inputs ?? '[]';
     const inputs: string[] = JSON.parse(inputsAttr);
-    const pyodideCdn = el.dataset.pyodideCdn!;
     const pyodideVersion = el.dataset.pyodideVersion ?? '0.28.3';
 
     const setStatus = (s: string) => { statusEl.textContent = s; };
 
     button.addEventListener('click', async () => {
       button.disabled = true;
-      const originalText = button.textContent;
+      const previousText = button.textContent ?? 'Run';
       try {
+        // Dispose any previous terminal in this container. Without
+        // this, multiple terminals appear stacked inside the same
+        // container, overflowing the box.
+        const prev = containerState.get(body);
+        if (prev) {
+          try { prev.fit.dispose(); } catch {}
+          try { prev.term.dispose(); } catch {}
+          containerState.delete(body);
+        }
+        // Also clear any leftover DOM from the disposed terminal.
+        body.replaceChildren();
+
         setStatus('Loading xterm.js…');
-        await loadXterm();
-        // @ts-ignore — window.Terminal was set by the script
-        const Terminal = window.Terminal;
-        // @ts-ignore — window.FitAddon was set by the script
-        const FitAddon = window.FitAddon;
-        const term = new Terminal({ cols: 80, rows: 24, fontFamily: 'ui-monospace, monospace', fontSize: 13, cursorBlink: true });
+        const { Terminal, FitAddon } = await loadXterm();
+        const term = new Terminal({
+          cols: 80,
+          rows: 24,
+          fontFamily: 'ui-monospace, "SF Mono", Menlo, monospace',
+          fontSize: 13,
+          cursorBlink: true,
+          convertEol: true,   // treat \n alone as a newline
+          scrollback: 5000,
+        });
         const fit = new FitAddon.FitAddon();
         term.loadAddon(fit);
         term.open(body);
         fit.fit();
+        containerState.set(body, { term, fit });
+
         term.write('\x1b[36m=== Python demo ===\x1b[0m\r\n');
         term.write(`Script: ${scriptUrl}\r\n\r\n`);
 
         setStatus('Loading Pyodide runtime (~6 MB)…');
         const pyodide = await loadPyodide(pyodideVersion);
 
-        const useInteractive = inputs.length === 0;
-        const stdinHandler = useInteractive
-          ? makeInteractiveStdin(term, setStatus)
-          : makeBatchedStdin([...inputs]);
+        // Per Pyodide 0.28 docs, the stdin callback returns a
+        // string/Uint8Array/number/null synchronously. Returning
+        // a Promise raises `OSError: I/O error`. We use a sync queue
+        // pre-populated from project.demo.inputs.
+        const stdinQueue: string[] = [...inputs];
 
         pyodide.setStdout({
           batched: (s: string) => term.write(s.replace(/\n/g, '\r\n')),
@@ -251,8 +238,10 @@ const pyodideCdn = `https://cdn.jsdelivr.net/pyodide/v${pyodideVersion}/full/`;
         pyodide.setStderr({
           batched: (s: string) => term.write('\x1b[31m' + s.replace(/\n/g, '\r\n') + '\x1b[0m'),
         });
-        // @ts-ignore — pyodide expects stdin options
-        pyodide.setStdin({ stdin: stdinHandler.stdin, isatty: useInteractive });
+        pyodide.setStdin({
+          stdin: () => stdinQueue.shift() ?? null,
+          isatty: false,
+        });
 
         setStatus('Fetching script…');
         const res = await fetch(scriptUrl);
@@ -260,7 +249,7 @@ const pyodideCdn = `https://cdn.jsdelivr.net/pyodide/v${pyodideVersion}/full/`;
         const src = await res.text();
         pyodide.FS.writeFile('/home/pyodide/run.py', src);
 
-        setStatus(useInteractive ? 'Running (interactive)' : 'Running');
+        setStatus(inputs.length > 0 ? `Running (${stdinQueue.length} inputs queued)` : 'Running');
         button.textContent = 'Restart';
 
         await pyodide.runPythonAsync(`
@@ -274,12 +263,17 @@ const pyodideCdn = `https://cdn.jsdelivr.net/pyodide/v${pyodideVersion}/full/`;
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
         setStatus(`Error: ${msg}`);
-        const term = (body.querySelector('.xterm') as any)?.terminal;
-        if (term) term.write(`\r\n\x1b[31m${msg}\x1b[0m\r\n`);
+        // Try to write the error to the visible terminal if possible.
+        try {
+          const cs = containerState.get(body);
+          if (cs) cs.term.write(`\r\n\x1b[31m${msg}\x1b[0m\r\n`);
+        } catch {}
         button.textContent = 'Retry';
       } finally {
         button.disabled = false;
-        if (button.textContent === originalText) button.textContent = 'Run again';
+        if (button.textContent !== 'Retry') {
+          button.textContent = button.textContent;  // keep "Restart"
+        }
       }
     });
   }
