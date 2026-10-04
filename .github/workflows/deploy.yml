@@ -1,0 +1,71 @@
+name: Deploy portfolio
+
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+  schedule:
+    # Every 6 hours. Backstop for missed pushes; picks up changes to
+    # sibling repos that don't trigger this workflow.
+    - cron: '17 */6 * * *'
+
+# Cancel in-flight builds when a new push arrives so we don't double-deploy.
+concurrency:
+  group: portfolio-deploy
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # Fetch project.yml files from every indexed sibling repo.
+      # Uses GITHUB_TOKEN if available (5,000 req/hr); falls back to
+      # unauthenticated (60 req/hr) which is enough for the current
+      # scale (9 repos -> ~18 API calls per run).
+      #
+      # TEMPORARILY DISABLED so the test fixture in
+      # src/data/projects.json (python-workshop-2 with demo.enabled)
+      # is preserved. Re-enable by uncommenting after the fixture
+      # is removed (and update docs/STEP-9-RESULT.md).
+      #
+      # - name: Discover projects
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.CROSS_REPO_PAT }}
+      #   run: node scripts/discover-projects.mjs
+
+      - name: Install dependencies
+        run: npm ci
+
+      # astro check runs the generated-types types from
+      # src/lib/types/project.ts against every .astro file. Type errors
+      # here fail the workflow before we ship the bundle.
+      - name: Type check
+        run: npx astro check
+
+      # withastro/action@v6 detects the package manager, installs
+      # deps, runs `prebuild` (which regenerates types from the
+      # schema), then runs `astro build` and uploads the artifact.
+      - name: Build
+        uses: withastro/action@v6
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

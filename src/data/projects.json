@@ -904,6 +904,12 @@
       "url": "https://github.com/SrLampi1001/riwi_projects",
       "html_url": "https://github.com/SrLampi1001/riwi_projects",
       "parent_path": "python/workshop_2"
+    },
+    "demo": {
+      "enabled": true,
+      "type": "python",
+      "runtime": "pyodide",
+      "entrypoint": "python/workshop_2/taller2.py"
     }
   },
   {
